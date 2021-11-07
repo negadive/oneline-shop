@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
+	Migrate()
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: handler.Error,
 	})
