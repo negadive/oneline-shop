@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jinzhu/copier"
 	"github.com/negadive/oneline/controller"
@@ -12,6 +13,11 @@ func Register(c *fiber.Ctx) error {
 	res_body := new(schema.UserRegisterRes)
 
 	if err := c.BodyParser(req_body); err != nil {
+		return err
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(req_body); err != nil {
 		return err
 	}
 

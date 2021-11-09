@@ -3,6 +3,7 @@ package handler
 import (
 	"strconv"
 
+	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jinzhu/copier"
 	"github.com/negadive/oneline/controller"
@@ -14,6 +15,10 @@ func StoreProduct(c *fiber.Ctx) error {
 	res_body := new(schema.ProductStoreRes)
 
 	if err := c.BodyParser(&req_body); err != nil {
+		return err
+	}
+	validate := validator.New()
+	if err := validate.Struct(req_body); err != nil {
 		return err
 	}
 
@@ -85,6 +90,10 @@ func UpdateProduct(c *fiber.Ctx) error {
 	res_body := new(schema.ProductUpdateRes)
 
 	if err := c.BodyParser(&req_body); err != nil {
+		return err
+	}
+	validate := validator.New()
+	if err := validate.Struct(req_body); err != nil {
 		return err
 	}
 

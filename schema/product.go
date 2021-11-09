@@ -6,12 +6,12 @@ import "time"
 REQUEST SCHEMA
 *************/
 type ProductStoreReq struct {
-	Name    string `json:"name"`
-	OwnerID uint   `json:"owner_id"`
+	Name    string `json:"name" validate:"required,min=4,max=100"`
+	OwnerID uint   `json:"owner_id" validate:"required"`
 }
 
 type ProductUpdateReq struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required,min=4,max=100"`
 }
 
 /**************

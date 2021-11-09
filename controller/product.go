@@ -68,7 +68,7 @@ func UpdateProduct(_product *schema.ProductUpdateReq, product_id int) (*model.Pr
 	if err := _db.Model(&model.Product{}).Where("id = ?", product_id).Updates(model.Product{Name: _product.Name}).Error; err != nil {
 		return nil, err
 	}
-	if err := _db.First(&product).Error; err != nil {
+	if err := _db.Where("id = ?", product_id).First(&product).Error; err != nil {
 		return nil, err
 	}
 
