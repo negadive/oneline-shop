@@ -19,5 +19,5 @@ func Error(c *fiber.Ctx, err error) error {
 		})
 	}
 
-	return nil
+	return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 }
