@@ -29,7 +29,7 @@ func Login(data *schema.LoginReq) (string, error) {
 	_db := db.GetDb()
 
 	user := map[string]interface{}{}
-	result := _db.Model(&model.User{}).Where(&model.User{Name: data.Name, Password: data.Password}).First(&user)
+	result := _db.Model(&model.User{}).Where(&model.User{Email: data.Email, Password: data.Password}).First(&user)
 	if result.Error != nil {
 		return "", result.Error
 	}

@@ -9,19 +9,10 @@
 			"name": "Product",
 			"item": [
 				{
-					"name": "Store Products",
+					"name": "Fetch Products",
 					"request": {
-						"method": "POST",
+						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"\",\r\n    \"owner_id\": 0\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
 							"raw": "{{url}}/products",
 							"host": [
@@ -35,17 +26,25 @@
 					"response": []
 				},
 				{
-					"name": "Fetch Products",
+					"name": "Fetch Products by User",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{url}}/products",
+							"raw": "{{url}}/users/:user_id/products",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
+								"users",
+								":user_id",
 								"products"
+							],
+							"variable": [
+								{
+									"key": "user_id",
+									"value": ""
+								}
 							]
 						}
 					},
@@ -70,6 +69,32 @@
 									"key": "id",
 									"value": "3"
 								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Store Products",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"\",\r\n    \"owner_id\": 0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/products",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"products"
 							]
 						}
 					},
@@ -107,6 +132,30 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/products/:id",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"products",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -120,7 +169,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"\",\r\n    \"password\": \"\"\r\n}",
+							"raw": "{\r\n    \"email\": \"\",\r\n    \"name\": \"\",\r\n    \"password\": \"\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -147,9 +196,26 @@
 				{
 					"name": "Login",
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [],
-						"url": null
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/login",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
 					},
 					"response": []
 				}
