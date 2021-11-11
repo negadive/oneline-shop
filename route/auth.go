@@ -6,5 +6,5 @@ import (
 )
 
 func Auth(app *fiber.App) {
-	app.Post("/login", handler.Login)
+	app.Post("/login", handler.DbCon, handler.Login)
 }
