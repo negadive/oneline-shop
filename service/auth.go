@@ -4,12 +4,16 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/negadive/oneline/db"
 	"github.com/negadive/oneline/model"
 	"github.com/negadive/oneline/schema"
+	"gorm.io/gorm"
 )
 
-func CreateToken(user map[string]interface{}) (string, error) {
+type AuthService struct {
+	DBCon *gorm.DB
+}
+
+func (s *AuthService) CreateToken(user map[string]interface{}) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
@@ -25,16 +29,14 @@ func CreateToken(user map[string]interface{}) (string, error) {
 	return t, nil
 }
 
-func Login(data *schema.LoginReq) (string, error) {
-	_db := db.GetDb()
-
+func (s *AuthService) Login(data *schema.LoginReq) (string, error) {
 	user := map[string]interface{}{}
-	result := _db.Model(&model.User{}).Where(&model.User{Email: data.Email, Password: data.Password}).First(&user)
+	result := s.DBCon.Model(&model.User{}).Where(&model.User{Email: data.Email, Password: data.Password}).First(&user)
 	if result.Error != nil {
 		return "", result.Error
 	}
 
-	token, err := CreateToken(user)
+	token, err := s.CreateToken(user)
 	if err != nil {
 		return "", nil
 	}

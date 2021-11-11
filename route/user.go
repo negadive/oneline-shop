@@ -8,6 +8,6 @@ import (
 func User(app *fiber.App) {
 	user := app.Group("/users")
 
-	user.Post("/", handler.Register)
+	user.Post("/", handler.DbCon, handler.Register)
 
 }
