@@ -3,9 +3,17 @@ package handler
 import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/negadive/oneline/controller"
 	"github.com/negadive/oneline/schema"
 )
+
+func extract_claims_from_jwt(c *fiber.Ctx) (jwt.MapClaims, error) {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+
+	return claims, nil
+}
 
 func Login(c *fiber.Ctx) error {
 	var reqBody schema.LoginReq
