@@ -8,13 +8,13 @@ import (
 func Product(app *fiber.App) {
 	product := app.Group("/products")
 
-	product.Post("/", handler.StoreProduct)
-	product.Get("/", handler.ListProducts)
-	product.Get("/:id", handler.GetProduct)
-	product.Patch("/:id", handler.UpdateProduct)
-	product.Delete("/:id", handler.DeleteProduct)
+	product.Post("/", handler.DbCon, handler.StoreProduct)
+	product.Get("/", handler.DbCon, handler.ListProducts)
+	product.Get("/:id", handler.DbCon, handler.GetProduct)
+	product.Patch("/:id", handler.DbCon, handler.UpdateProduct)
+	product.Delete("/:id", handler.DbCon, handler.DeleteProduct)
 
 	users_product := app.Group("/users/:user_id/products")
 
-	users_product.Get("/", handler.ListUserProducts)
+	users_product.Get("/", handler.DbCon, handler.ListUserProducts)
 }
