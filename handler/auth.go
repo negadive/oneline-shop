@@ -4,8 +4,8 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/negadive/oneline/controller"
 	"github.com/negadive/oneline/schema"
+	"github.com/negadive/oneline/service"
 )
 
 func extract_claims_from_jwt(c *fiber.Ctx) (jwt.MapClaims, error) {
@@ -29,7 +29,7 @@ func Login(c *fiber.Ctx) error {
 		return err
 	}
 
-	token, err := controller.Login(&reqBody)
+	token, err := service.Login(&reqBody)
 	if err != nil {
 		return c.Status(422).JSON(fiber.Map{
 			"message": "login error",

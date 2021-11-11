@@ -6,9 +6,9 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jinzhu/copier"
-	ctrl "github.com/negadive/oneline/controller"
 	"github.com/negadive/oneline/repository"
 	"github.com/negadive/oneline/schema"
+	ctrl "github.com/negadive/oneline/service"
 	"gorm.io/gorm"
 )
 
@@ -33,8 +33,8 @@ func StoreProduct(c *fiber.Ctx) error {
 		})
 	}
 
-	ProductController := ctrl.ProductController{DBCon: db_con}
-	o, err := ProductController.StoreProduct(req_body)
+	ProductService := ctrl.ProductService{DBCon: db_con}
+	o, err := ProductService.StoreProduct(req_body)
 	if err != nil {
 		return err
 	}
@@ -53,8 +53,8 @@ func GetProduct(c *fiber.Ctx) error {
 		return err
 	}
 
-	ProductController := ctrl.ProductController{DBCon: db_con}
-	o, err := ProductController.GetProduct(o_id)
+	ProductService := ctrl.ProductService{DBCon: db_con}
+	o, err := ProductService.GetProduct(o_id)
 	if err != nil {
 		return err
 	}
@@ -68,8 +68,8 @@ func GetProduct(c *fiber.Ctx) error {
 func ListProducts(c *fiber.Ctx) error {
 	db_con := c.Locals("db_con").(*gorm.DB)
 
-	ProductController := ctrl.ProductController{DBCon: db_con}
-	o, err := ProductController.ListProducts()
+	ProductService := ctrl.ProductService{DBCon: db_con}
+	o, err := ProductService.ListProducts()
 	if err != nil {
 		return err
 	}
@@ -88,8 +88,8 @@ func ListUserProducts(c *fiber.Ctx) error {
 		return err
 	}
 
-	ProductController := ctrl.ProductController{DBCon: db_con}
-	o, err := ProductController.ListUserProducts(owner_id)
+	ProductService := ctrl.ProductService{DBCon: db_con}
+	o, err := ProductService.ListUserProducts(owner_id)
 	if err != nil {
 		return err
 	}
@@ -127,8 +127,8 @@ func UpdateProduct(c *fiber.Ctx) error {
 		})
 	}
 
-	ProductController := ctrl.ProductController{DBCon: db_con}
-	o, err := ProductController.UpdateProduct(req_body, o_id)
+	ProductService := ctrl.ProductService{DBCon: db_con}
+	o, err := ProductService.UpdateProduct(req_body, o_id)
 	if err != nil {
 		return err
 	}
@@ -146,8 +146,8 @@ func DeleteProduct(c *fiber.Ctx) error {
 		return err
 	}
 
-	ProductController := ctrl.ProductController{DBCon: db_con}
-	if err := ProductController.DeleteProduct(o_id); err != nil {
+	ProductService := ctrl.ProductService{DBCon: db_con}
+	if err := ProductService.DeleteProduct(o_id); err != nil {
 		return err
 	}
 

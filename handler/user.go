@@ -4,8 +4,8 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jinzhu/copier"
-	"github.com/negadive/oneline/controller"
 	"github.com/negadive/oneline/schema"
+	"github.com/negadive/oneline/service"
 )
 
 func Register(c *fiber.Ctx) error {
@@ -21,7 +21,7 @@ func Register(c *fiber.Ctx) error {
 		return err
 	}
 
-	o, err := controller.Register(req_body)
+	o, err := service.Register(req_body)
 	if err != nil {
 		return err
 	}
