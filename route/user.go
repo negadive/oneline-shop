@@ -9,5 +9,6 @@ func User(app *fiber.App) {
 	user := app.Group("/users")
 
 	user.Post("/", handler.DbCon, handler.Register)
+	user.Patch("/:id", handler.DbCon, handler.UpdateUser)
 
 }

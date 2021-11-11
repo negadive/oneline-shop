@@ -33,6 +33,10 @@ func Error(c *fiber.Ctx, err error) error {
 			"message": "invalid data",
 			"details": details,
 		})
+	} else if err_text := err.Error(); err_text == "Unprocessable Entity" {
+		return c.Status(400).JSON(fiber.Map{
+			"message": err_text,
+		})
 	}
 
 	return c.Status(fiber.StatusInternalServerError).SendString(err.Error())

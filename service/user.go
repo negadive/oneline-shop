@@ -19,3 +19,20 @@ func (c *UserService) Register(_user *schema.UserRegisterReq) (*model.User, erro
 
 	return &user, nil
 }
+
+func (c *UserService) UpdateUser(_user *schema.UserUpdateReq, user_id int) (*model.User, error) {
+	var count int64
+	if c.DBCon.Model(&model.User{}).Where("id = ?", user_id).Count(&count); count < 1 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	user := model.User{}
+	if err := c.DBCon.Model(&model.User{}).Where("id = ?", user_id).Updates(model.User{Name: _user.Name, Password: _user.Password}).Error; err != nil {
+		return nil, err
+	}
+	if err := c.DBCon.Where("id = ?", user_id).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
