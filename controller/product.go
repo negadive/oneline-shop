@@ -1,17 +1,18 @@
 package controller
 
 import (
-	"github.com/negadive/oneline/db"
 	"github.com/negadive/oneline/model"
 	"github.com/negadive/oneline/schema"
 	"gorm.io/gorm"
 )
 
-func StoreProduct(_product *schema.ProductStoreReq) (*model.Product, error) {
-	_db := db.GetDb()
+type ProductController struct {
+	DBCon *gorm.DB
+}
 
+func (c *ProductController) StoreProduct(_product *schema.ProductStoreReq) (*model.Product, error) {
 	product := model.Product{Name: _product.Name, OwnerID: _product.OwnerID}
-	result := _db.Create(&product)
+	result := c.DBCon.Create(&product)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -19,11 +20,9 @@ func StoreProduct(_product *schema.ProductStoreReq) (*model.Product, error) {
 	return &product, nil
 }
 
-func GetProduct(product_id int) (*model.Product, error) {
-	_db := db.GetDb()
-
+func (c *ProductController) GetProduct(product_id int) (*model.Product, error) {
 	product := model.Product{}
-	result := _db.First(&product, product_id)
+	result := c.DBCon.First(&product, product_id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -31,11 +30,9 @@ func GetProduct(product_id int) (*model.Product, error) {
 	return &product, nil
 }
 
-func listProducts(owner_id int) (*[]model.Product, error) {
-	_db := db.GetDb()
-
+func (c *ProductController) listProducts(owner_id int) (*[]model.Product, error) {
 	products := []model.Product{}
-	query := _db.Model(&model.Product{})
+	query := c.DBCon.Model(&model.Product{})
 	if owner_id != 0 {
 		query = query.Where("owner_id = ?", owner_id)
 	}
@@ -48,42 +45,38 @@ func listProducts(owner_id int) (*[]model.Product, error) {
 	return &products, nil
 }
 
-func ListProducts() (*[]model.Product, error) {
-	return listProducts(0)
+func (c *ProductController) ListProducts() (*[]model.Product, error) {
+	return c.listProducts(0)
 }
 
-func ListUserProducts(owner_id int) (*[]model.Product, error) {
-	return listProducts(owner_id)
+func (c *ProductController) ListUserProducts(owner_id int) (*[]model.Product, error) {
+	return c.listProducts(owner_id)
 }
 
-func UpdateProduct(_product *schema.ProductUpdateReq, product_id int) (*model.Product, error) {
+func (c *ProductController) UpdateProduct(_product *schema.ProductUpdateReq, product_id int) (*model.Product, error) {
 	var count int64
-	_db := db.GetDb()
-
-	if _db.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
+	if c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
 		return nil, gorm.ErrRecordNotFound
 	}
 
 	product := model.Product{}
-	if err := _db.Model(&model.Product{}).Where("id = ?", product_id).Updates(model.Product{Name: _product.Name}).Error; err != nil {
+	if err := c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Updates(model.Product{Name: _product.Name}).Error; err != nil {
 		return nil, err
 	}
-	if err := _db.Where("id = ?", product_id).First(&product).Error; err != nil {
+	if err := c.DBCon.Where("id = ?", product_id).First(&product).Error; err != nil {
 		return nil, err
 	}
 
 	return &product, nil
 }
 
-func DeleteProduct(product_id int) error {
+func (c *ProductController) DeleteProduct(product_id int) error {
 	var count int64
-	_db := db.GetDb()
-
-	if _db.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
+	if c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
 		return gorm.ErrRecordNotFound
 	}
 
-	if err := _db.Delete(&model.Product{}, product_id).Error; err != nil {
+	if err := c.DBCon.Delete(&model.Product{}, product_id).Error; err != nil {
 		return err
 	}
 
