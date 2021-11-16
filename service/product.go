@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/negadive/oneline/model"
-	"github.com/negadive/oneline/schema"
 	"gorm.io/gorm"
 )
 
@@ -10,14 +9,13 @@ type ProductService struct {
 	DBCon *gorm.DB
 }
 
-func (c *ProductService) StoreProduct(_product *schema.ProductStoreReq) (*model.Product, error) {
-	product := model.Product{Name: _product.Name, OwnerID: _product.OwnerID}
+func (c *ProductService) StoreProduct(product *model.Product) error {
 	result := c.DBCon.Create(&product)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
 
-	return &product, nil
+	return nil
 }
 
 func (c *ProductService) GetProduct(product_id int) (*model.Product, error) {
@@ -53,21 +51,20 @@ func (c *ProductService) ListUserProducts(owner_id int) (*[]model.Product, error
 	return c.listProducts(owner_id)
 }
 
-func (c *ProductService) UpdateProduct(_product *schema.ProductUpdateReq, product_id int) (*model.Product, error) {
+func (c *ProductService) UpdateProduct(product *model.Product, product_id int) error {
 	var count int64
 	if c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
-		return nil, gorm.ErrRecordNotFound
+		return gorm.ErrRecordNotFound
 	}
 
-	product := model.Product{}
-	if err := c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Updates(model.Product{Name: _product.Name}).Error; err != nil {
-		return nil, err
+	if err := c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Updates(&product).Error; err != nil {
+		return err
 	}
 	if err := c.DBCon.Where("id = ?", product_id).First(&product).Error; err != nil {
-		return nil, err
+		return err
 	}
 
-	return &product, nil
+	return nil
 }
 
 func (c *ProductService) DeleteProduct(product_id int) error {

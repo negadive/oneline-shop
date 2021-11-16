@@ -6,9 +6,10 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jinzhu/copier"
+	"github.com/negadive/oneline/model"
 	"github.com/negadive/oneline/repository"
 	"github.com/negadive/oneline/schema"
-	ctrl "github.com/negadive/oneline/service"
+	"github.com/negadive/oneline/service"
 	"gorm.io/gorm"
 )
 
@@ -33,14 +34,15 @@ func StoreProduct(c *fiber.Ctx) error {
 		})
 	}
 
-	ProductService := ctrl.ProductService{DBCon: db_con}
-	o, err := ProductService.StoreProduct(req_body)
-	if err != nil {
+	product := new(model.Product)
+	copier.Copy(&product, &req_body)
+	ProductService := service.ProductService{DBCon: db_con}
+	if err := ProductService.StoreProduct(product); err != nil {
 		return err
 	}
 
 	res_body := new(schema.ProductStoreRes)
-	copier.Copy(&res_body, &o)
+	copier.Copy(&res_body, &product)
 
 	return c.Status(201).JSON(&res_body)
 }
@@ -53,7 +55,7 @@ func GetProduct(c *fiber.Ctx) error {
 		return err
 	}
 
-	ProductService := ctrl.ProductService{DBCon: db_con}
+	ProductService := service.ProductService{DBCon: db_con}
 	o, err := ProductService.GetProduct(o_id)
 	if err != nil {
 		return err
@@ -68,7 +70,7 @@ func GetProduct(c *fiber.Ctx) error {
 func ListProducts(c *fiber.Ctx) error {
 	db_con := c.Locals("db_con").(*gorm.DB)
 
-	ProductService := ctrl.ProductService{DBCon: db_con}
+	ProductService := service.ProductService{DBCon: db_con}
 	o, err := ProductService.ListProducts()
 	if err != nil {
 		return err
@@ -88,7 +90,7 @@ func ListUserProducts(c *fiber.Ctx) error {
 		return err
 	}
 
-	ProductService := ctrl.ProductService{DBCon: db_con}
+	ProductService := service.ProductService{DBCon: db_con}
 	o, err := ProductService.ListUserProducts(owner_id)
 	if err != nil {
 		return err
@@ -127,14 +129,15 @@ func UpdateProduct(c *fiber.Ctx) error {
 		})
 	}
 
-	ProductService := ctrl.ProductService{DBCon: db_con}
-	o, err := ProductService.UpdateProduct(req_body, o_id)
-	if err != nil {
+	product := new(model.Product)
+	copier.Copy(&product, &req_body)
+	ProductService := service.ProductService{DBCon: db_con}
+	if err := ProductService.UpdateProduct(product, o_id); err != nil {
 		return err
 	}
 
 	res_body := new(schema.ProductUpdateRes)
-	copier.Copy(&res_body, &o)
+	copier.Copy(&res_body, &product)
 
 	return c.JSON(&res_body)
 }
@@ -146,7 +149,7 @@ func DeleteProduct(c *fiber.Ctx) error {
 		return err
 	}
 
-	ProductService := ctrl.ProductService{DBCon: db_con}
+	ProductService := service.ProductService{DBCon: db_con}
 	if err := ProductService.DeleteProduct(o_id); err != nil {
 		return err
 	}
