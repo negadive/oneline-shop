@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "4dea572a-874d-43f5-a1f0-894efe12894d",
+		"_postman_id": "a67667d1-8393-4d7c-be53-53e2104396d8",
 		"name": "Oneline",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,6 +11,16 @@
 				{
 					"name": "Fetch Products",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzczMzEyMTQsImlkIjoyOCwibmFtZSI6ImFzZCJ9.3VKGCGdYqyW8JHN9d93NN-immZ6pH4UFbiHGMdtc96A",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -77,11 +87,21 @@
 				{
 					"name": "Store Products",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzcwMjU3NTQsImlkIjoyOCwibmFtZSI6ImFzZCJ9.-JQypWglDdKPlqucqNoGS5-3wBnLLG9g7NejoM06TRU",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"\",\r\n    \"owner_id\": 0\r\n}",
+							"raw": "{\r\n    \"name\": \"Product berharga\",\r\n    \"owner_id\": 28,\r\n    \"price\": 2.500\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -103,11 +123,21 @@
 				{
 					"name": "Update Product",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzczMzEyMTQsImlkIjoyOCwibmFtZSI6ImFzZCJ9.3VKGCGdYqyW8JHN9d93NN-immZ6pH4UFbiHGMdtc96A",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PATCH",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"\"\r\n}",
+							"raw": "{\r\n    \"price\": 5334500\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -126,7 +156,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "3"
+									"value": "5"
 								}
 							]
 						}
@@ -187,6 +217,49 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzY4NzY2MzgsImlkIjoyOCwibmFtZSI6ImhlaGU0In0.RYPNoNYBg_Njh-wCXrSuuGeSykjGGPWwG0bVJwbqkAU",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"password\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/users/:id",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -200,7 +273,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \r\n}",
+							"raw": "{\r\n    \"email\": \"hehe4@gmail.com\",\r\n    \"password\": \"hehehe44\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -214,6 +287,47 @@
 							],
 							"path": [
 								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "Store",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzczMjg5NjAsImlkIjoyOCwibmFtZSI6ImFzZCJ9.xMyJ9u2lQ5sPp00KcIm924kG--EpdgUekVeri8U49Do",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"product_ids\": [4, 5, 6],\r\n    \"note\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/orders",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"orders"
 							]
 						}
 					},
