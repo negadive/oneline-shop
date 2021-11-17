@@ -8,5 +8,5 @@ import (
 func Migrate() {
 	_db := db.GetDb()
 
-	_db.AutoMigrate(&model.User{}, &model.Product{})
+	_db.AutoMigrate(&model.User{}, &model.Product{}, &model.Order{}, &model.OrderProduct{})
 }

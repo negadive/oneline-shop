@@ -8,4 +8,5 @@ func Init(app *fiber.App) {
 	User(app)
 	Auth(app)
 	Product(app)
+	Order(app)
 }
