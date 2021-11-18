@@ -1,15 +1,37 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/negadive/oneline/model"
 	"gorm.io/gorm"
 )
 
-type ProductRespository struct {
+type IProductRepository interface {
+	Store(ctx context.Context, product *model.Product) error
+	Update(ctx context.Context, product_id *uint, product *model.Product) error
+	Delete(ctx context.Context, product_id *uint) error
+	FindById(ctx context.Context, product_id *uint) (*model.Product, error)
+	FindAll(ctx context.Context) (*[]model.Product, error)
+	FindAllOwnerByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error)
+	IsExists(ctx context.Context, product_id *uint) bool
+	ProductWithOwnerExists(ctx context.Context, product_id *uint, owner_id *uint) bool
+	FindByIds(ctx context.Context, products *[]model.Product, product_ids *[]uint) error
+}
+
+type ProductRepository struct {
 	DBCon *gorm.DB
 }
 
-func (repo *ProductRespository) Store(product *model.Product) error {
+func NewProductRepository(DBCon *gorm.DB) IProductRepository {
+	r := ProductRepository{
+		DBCon: DBCon,
+	}
+
+	return &r
+}
+
+func (repo *ProductRepository) Store(ctx context.Context, product *model.Product) error {
 	result := repo.DBCon.Create(&product)
 	if result.Error != nil {
 		return result.Error
@@ -18,7 +40,7 @@ func (repo *ProductRespository) Store(product *model.Product) error {
 	return nil
 }
 
-func (repo *ProductRespository) Update(product_id *uint, product *model.Product) error {
+func (repo *ProductRepository) Update(ctx context.Context, product_id *uint, product *model.Product) error {
 	if err := repo.DBCon.Model(&model.Product{}).Where("id = ?", *product_id).Updates(&product).Error; err != nil {
 		return err
 	}
@@ -26,7 +48,7 @@ func (repo *ProductRespository) Update(product_id *uint, product *model.Product)
 	return nil
 }
 
-func (repo *ProductRespository) Delete(product_id *uint) error {
+func (repo *ProductRepository) Delete(ctx context.Context, product_id *uint) error {
 	if err := repo.DBCon.Delete(&model.Product{}, product_id).Error; err != nil {
 		return err
 	}
@@ -34,7 +56,7 @@ func (repo *ProductRespository) Delete(product_id *uint) error {
 	return nil
 }
 
-func (repo *ProductRespository) FindById(product_id *uint) (*model.Product, error) {
+func (repo *ProductRepository) FindById(ctx context.Context, product_id *uint) (*model.Product, error) {
 	product := model.Product{}
 	result := repo.DBCon.First(&product, product_id)
 	if result.Error != nil {
@@ -44,7 +66,7 @@ func (repo *ProductRespository) FindById(product_id *uint) (*model.Product, erro
 	return &product, nil
 }
 
-func (repo *ProductRespository) FindAll() (*[]model.Product, error) {
+func (repo *ProductRepository) FindAll(ctx context.Context) (*[]model.Product, error) {
 	products := []model.Product{}
 	result := repo.DBCon.Model(&model.Product{}).Find(&products)
 
@@ -55,7 +77,7 @@ func (repo *ProductRespository) FindAll() (*[]model.Product, error) {
 	return &products, nil
 }
 
-func (repo *ProductRespository) FindAllOwnerByUser(owner_id *uint) (*[]model.Product, error) {
+func (repo *ProductRepository) FindAllOwnerByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error) {
 	products := []model.Product{}
 	result := repo.DBCon.Model(&model.Product{}).Where("owner_id = ?", owner_id).Find(&products)
 
@@ -66,7 +88,7 @@ func (repo *ProductRespository) FindAllOwnerByUser(owner_id *uint) (*[]model.Pro
 	return &products, nil
 }
 
-func (repo *ProductRespository) IsExists(product_id *uint) bool {
+func (repo *ProductRepository) IsExists(ctx context.Context, product_id *uint) bool {
 	var count int64
 	if repo.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
 		return false
@@ -76,7 +98,7 @@ func (repo *ProductRespository) IsExists(product_id *uint) bool {
 
 }
 
-func (repo *ProductRespository) ProductWithOwnerExists(product_id *uint, owner_id *uint) bool {
+func (repo *ProductRepository) ProductWithOwnerExists(ctx context.Context, product_id *uint, owner_id *uint) bool {
 	var count int64
 
 	repo.DBCon.Model(&model.Product{}).Where("id = ?", *product_id).Where("owner_id = ?", *owner_id).Count(&count)
@@ -84,7 +106,7 @@ func (repo *ProductRespository) ProductWithOwnerExists(product_id *uint, owner_i
 	return count == 1
 }
 
-func (repo *ProductRespository) FindByIds(products *[]model.Product, product_ids *[]uint) error {
+func (repo *ProductRepository) FindByIds(ctx context.Context, products *[]model.Product, product_ids *[]uint) error {
 	if err := repo.DBCon.Model(&model.Product{}).Find(products, product_ids).Error; err != nil {
 		return err
 	}

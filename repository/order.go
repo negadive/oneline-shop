@@ -1,15 +1,30 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/negadive/oneline/model"
 	"gorm.io/gorm"
 )
+
+type IOrderRepository interface {
+	Store(ctx context.Context, order *model.Order) error
+	StoreOrderProducts(ctx context.Context, order_id *uint, products *[]model.Product) error
+}
 
 type OrderRepository struct {
 	DBCon *gorm.DB
 }
 
-func (r *OrderRepository) Store(order *model.Order) error {
+func NewOrderRepository(DBCon *gorm.DB) IOrderRepository {
+	r := OrderRepository{
+		DBCon: DBCon,
+	}
+
+	return &r
+}
+
+func (r *OrderRepository) Store(ctx context.Context, order *model.Order) error {
 	result := r.DBCon.Create(order)
 	if result.Error != nil {
 		return result.Error
@@ -18,7 +33,7 @@ func (r *OrderRepository) Store(order *model.Order) error {
 	return nil
 }
 
-func (r *OrderRepository) StoreOrderProducts(order_id *uint, products *[]model.Product) error {
+func (r *OrderRepository) StoreOrderProducts(ctx context.Context, order_id *uint, products *[]model.Product) error {
 	order_products := []model.OrderProduct{}
 	for _, product := range *products {
 		order_product := model.OrderProduct{

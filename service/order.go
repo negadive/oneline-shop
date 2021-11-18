@@ -1,22 +1,35 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/negadive/oneline/model"
 	"github.com/negadive/oneline/repository"
-	"gorm.io/gorm"
 )
 
-type OrderService struct {
-	DBCon       *gorm.DB
-	OrderRepo   *repository.OrderRepository
-	ProductRepo *repository.ProductRespository
+type IOrderService interface {
+	Store(ctx context.Context, order *model.Order, product_ids *[]uint) error
 }
 
-func (s *OrderService) Store(order *model.Order, product_ids *[]uint) error {
+type OrderService struct {
+	OrderRepo   repository.IOrderRepository
+	ProductRepo repository.IProductRepository
+}
+
+func NewOrderService(
+	order_repo repository.IOrderRepository,
+	product_repo repository.IProductRepository,
+) IOrderService {
+	return &OrderService{
+		OrderRepo:   order_repo,
+		ProductRepo: product_repo,
+	}
+}
+
+func (s *OrderService) Store(ctx context.Context, order *model.Order, product_ids *[]uint) error {
 	products := []model.Product{}
-	if err := s.ProductRepo.FindByIds(&products, product_ids); err != nil {
+	if err := s.ProductRepo.FindByIds(ctx, &products, product_ids); err != nil {
 		return err
 	}
 	if len(products) != len(*product_ids) {
@@ -29,10 +42,10 @@ func (s *OrderService) Store(order *model.Order, product_ids *[]uint) error {
 
 	order.Status = "CREATED"
 	order.TotalPrice = total_price
-	if err := s.OrderRepo.Store(order); err != nil {
+	if err := s.OrderRepo.Store(ctx, order); err != nil {
 		return err
 	}
-	if err := s.OrderRepo.StoreOrderProducts(&order.ID, &products); err != nil {
+	if err := s.OrderRepo.StoreOrderProducts(ctx, &order.ID, &products); err != nil {
 		return err
 	}
 

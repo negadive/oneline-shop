@@ -1,25 +1,47 @@
 package service
 
 import (
+	"context"
+
 	"github.com/negadive/oneline/model"
 	"github.com/negadive/oneline/repository"
 	"gorm.io/gorm"
 )
 
-type ProductService struct {
-	ProductRepo *repository.ProductRespository
+type IProductService interface {
+	GetProductRepo() repository.IProductRepository
+	Store(ctx context.Context, product *model.Product) error
+	GetOne(ctx context.Context, product_id *uint) (*model.Product, error)
+	FindAll(ctx context.Context) (*[]model.Product, error)
+	FindAllByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error)
+	Delete(ctx context.Context, product_id *uint) error
+	Update(ctx context.Context, product_id *uint, product *model.Product) error
 }
 
-func (c *ProductService) StoreProduct(product *model.Product) error {
-	if err := c.ProductRepo.Store(product); err != nil {
+type ProductService struct {
+	ProductRepo repository.IProductRepository
+}
+
+func NewProductService(product_repo repository.IProductRepository) IProductService {
+	return &ProductService{
+		ProductRepo: product_repo,
+	}
+}
+
+func (s *ProductService) GetProductRepo() repository.IProductRepository {
+	return s.ProductRepo
+}
+
+func (s *ProductService) Store(ctx context.Context, product *model.Product) error {
+	if err := s.ProductRepo.Store(ctx, product); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *ProductService) GetProduct(product_id *uint) (*model.Product, error) {
-	product, err := c.ProductRepo.FindById(product_id)
+func (s *ProductService) GetOne(ctx context.Context, product_id *uint) (*model.Product, error) {
+	product, err := s.ProductRepo.FindById(ctx, product_id)
 	if err != nil {
 		return nil, err
 	}
@@ -27,8 +49,8 @@ func (c *ProductService) GetProduct(product_id *uint) (*model.Product, error) {
 	return product, nil
 }
 
-func (c *ProductService) ListProducts() (*[]model.Product, error) {
-	products, err := c.ProductRepo.FindAll()
+func (s *ProductService) FindAll(ctx context.Context) (*[]model.Product, error) {
+	products, err := s.ProductRepo.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +58,8 @@ func (c *ProductService) ListProducts() (*[]model.Product, error) {
 	return products, nil
 }
 
-func (c *ProductService) ListUserProducts(owner_id *uint) (*[]model.Product, error) {
-	products, err := c.ProductRepo.FindAllOwnerByUser(owner_id)
+func (s *ProductService) FindAllByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error) {
+	products, err := s.ProductRepo.FindAllOwnerByUser(ctx, owner_id)
 	if err != nil {
 		return nil, err
 	}
@@ -45,14 +67,14 @@ func (c *ProductService) ListUserProducts(owner_id *uint) (*[]model.Product, err
 	return products, nil
 }
 
-func (c *ProductService) UpdateProduct(product *model.Product, product_id *uint) error {
-	if !c.ProductRepo.IsExists(product_id) {
+func (s *ProductService) Update(ctx context.Context, product_id *uint, product *model.Product) error {
+	if !s.ProductRepo.IsExists(ctx, product_id) {
 		return gorm.ErrRecordNotFound
 	}
-	if err := c.ProductRepo.Update(product_id, product); err != nil {
+	if err := s.ProductRepo.Update(ctx, product_id, product); err != nil {
 		return err
 	}
-	new_product, err := c.ProductRepo.FindById(product_id)
+	new_product, err := s.ProductRepo.FindById(ctx, product_id)
 	if err != nil {
 		return err
 	}
@@ -61,11 +83,11 @@ func (c *ProductService) UpdateProduct(product *model.Product, product_id *uint)
 	return nil
 }
 
-func (c *ProductService) DeleteProduct(product_id *uint) error {
-	if !c.ProductRepo.IsExists(product_id) {
+func (s *ProductService) Delete(ctx context.Context, product_id *uint) error {
+	if !s.ProductRepo.IsExists(ctx, product_id) {
 		return gorm.ErrRecordNotFound
 	}
-	if err := c.ProductRepo.Delete(product_id); err != nil {
+	if err := s.ProductRepo.Delete(ctx, product_id); err != nil {
 		return err
 	}
 
