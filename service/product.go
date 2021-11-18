@@ -2,78 +2,70 @@ package service
 
 import (
 	"github.com/negadive/oneline/model"
+	"github.com/negadive/oneline/repository"
 	"gorm.io/gorm"
 )
 
 type ProductService struct {
-	DBCon *gorm.DB
+	ProductRepo *repository.ProductRespository
 }
 
 func (c *ProductService) StoreProduct(product *model.Product) error {
-	result := c.DBCon.Create(&product)
-	if result.Error != nil {
-		return result.Error
+	if err := c.ProductRepo.Store(product); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (c *ProductService) GetProduct(product_id int) (*model.Product, error) {
-	product := model.Product{}
-	result := c.DBCon.First(&product, product_id)
-	if result.Error != nil {
-		return nil, result.Error
+func (c *ProductService) GetProduct(product_id *uint) (*model.Product, error) {
+	product, err := c.ProductRepo.FindById(product_id)
+	if err != nil {
+		return nil, err
 	}
 
-	return &product, nil
-}
-
-func (c *ProductService) listProducts(owner_id int) (*[]model.Product, error) {
-	products := []model.Product{}
-	query := c.DBCon.Model(&model.Product{})
-	if owner_id != 0 {
-		query = query.Where("owner_id = ?", owner_id)
-	}
-
-	result := query.Find(&products)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return &products, nil
+	return product, nil
 }
 
 func (c *ProductService) ListProducts() (*[]model.Product, error) {
-	return c.listProducts(0)
+	products, err := c.ProductRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
 
-func (c *ProductService) ListUserProducts(owner_id int) (*[]model.Product, error) {
-	return c.listProducts(owner_id)
+func (c *ProductService) ListUserProducts(owner_id *uint) (*[]model.Product, error) {
+	products, err := c.ProductRepo.FindAllOwnerByUser(owner_id)
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
 
-func (c *ProductService) UpdateProduct(product *model.Product, product_id int) error {
-	var count int64
-	if c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
+func (c *ProductService) UpdateProduct(product *model.Product, product_id *uint) error {
+	if !c.ProductRepo.IsExists(product_id) {
 		return gorm.ErrRecordNotFound
 	}
-
-	if err := c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Updates(&product).Error; err != nil {
+	if err := c.ProductRepo.Update(product_id, product); err != nil {
 		return err
 	}
-	if err := c.DBCon.Where("id = ?", product_id).First(&product).Error; err != nil {
+	new_product, err := c.ProductRepo.FindById(product_id)
+	if err != nil {
 		return err
 	}
+	*product = *new_product
 
 	return nil
 }
 
-func (c *ProductService) DeleteProduct(product_id int) error {
-	var count int64
-	if c.DBCon.Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
+func (c *ProductService) DeleteProduct(product_id *uint) error {
+	if !c.ProductRepo.IsExists(product_id) {
 		return gorm.ErrRecordNotFound
 	}
-
-	if err := c.DBCon.Delete(&model.Product{}, product_id).Error; err != nil {
+	if err := c.ProductRepo.Delete(product_id); err != nil {
 		return err
 	}
 

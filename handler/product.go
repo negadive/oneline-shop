@@ -36,7 +36,9 @@ func StoreProduct(c *fiber.Ctx) error {
 
 	product := new(model.Product)
 	copier.Copy(&product, &req_body)
-	ProductService := service.ProductService{DBCon: db_con}
+	ProductService := service.ProductService{
+		ProductRepo: &repository.ProductRespository{DBCon: db_con},
+	}
 	if err := ProductService.StoreProduct(product); err != nil {
 		return err
 	}
@@ -50,19 +52,22 @@ func StoreProduct(c *fiber.Ctx) error {
 func GetProduct(c *fiber.Ctx) error {
 	db_con := c.Locals("db_con").(*gorm.DB)
 
-	o_id, err := strconv.Atoi(c.Params("id"))
+	product_id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return err
 	}
+	uint_product_id := uint(product_id)
 
-	ProductService := service.ProductService{DBCon: db_con}
-	o, err := ProductService.GetProduct(o_id)
+	ProductService := service.ProductService{
+		ProductRepo: &repository.ProductRespository{DBCon: db_con},
+	}
+	product, err := ProductService.GetProduct(&uint_product_id)
 	if err != nil {
 		return err
 	}
 
 	res_body := new(schema.ProductGetOneRes)
-	copier.Copy(&res_body, &o)
+	copier.Copy(&res_body, &product)
 
 	return c.Status(200).JSON(&res_body)
 }
@@ -70,14 +75,16 @@ func GetProduct(c *fiber.Ctx) error {
 func ListProducts(c *fiber.Ctx) error {
 	db_con := c.Locals("db_con").(*gorm.DB)
 
-	ProductService := service.ProductService{DBCon: db_con}
-	o, err := ProductService.ListProducts()
+	ProductService := service.ProductService{
+		ProductRepo: &repository.ProductRespository{DBCon: db_con},
+	}
+	product, err := ProductService.ListProducts()
 	if err != nil {
 		return err
 	}
 
 	res_body := new([]schema.ProductListRes)
-	copier.Copy(&res_body, &o)
+	copier.Copy(&res_body, &product)
 
 	return c.JSON(&res_body)
 }
@@ -89,15 +96,18 @@ func ListUserProducts(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	uint_owner_id := uint(owner_id)
 
-	ProductService := service.ProductService{DBCon: db_con}
-	o, err := ProductService.ListUserProducts(owner_id)
+	ProductService := service.ProductService{
+		ProductRepo: &repository.ProductRespository{DBCon: db_con},
+	}
+	product, err := ProductService.ListUserProducts(&uint_owner_id)
 	if err != nil {
 		return err
 	}
 
 	res_body := new([]schema.ProductListRes)
-	copier.Copy(&res_body, &o)
+	copier.Copy(&res_body, &product)
 
 	return c.JSON(&res_body)
 }
@@ -109,10 +119,11 @@ func UpdateProduct(c *fiber.Ctx) error {
 		return err
 	}
 	auth_user_id := uint(claims["id"].(float64))
-	o_id, err := strconv.Atoi(c.Params("id"))
+	product_id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return err
 	}
+	uint_product_id := uint(product_id)
 
 	req_body := new(schema.ProductUpdateReq)
 	if err := c.BodyParser(&req_body); err != nil {
@@ -123,7 +134,7 @@ func UpdateProduct(c *fiber.Ctx) error {
 		return err
 	}
 	ProductRepository := repository.ProductRespository{DBCon: db_con}
-	if !ProductRepository.ProductWithOwnerExists(o_id, auth_user_id) {
+	if !ProductRepository.ProductWithOwnerExists(&uint_product_id, &auth_user_id) {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "No product found for this owner",
 		})
@@ -131,8 +142,10 @@ func UpdateProduct(c *fiber.Ctx) error {
 
 	product := new(model.Product)
 	copier.Copy(&product, &req_body)
-	ProductService := service.ProductService{DBCon: db_con}
-	if err := ProductService.UpdateProduct(product, o_id); err != nil {
+	ProductService := service.ProductService{
+		ProductRepo: &ProductRepository,
+	}
+	if err := ProductService.UpdateProduct(product, &uint_product_id); err != nil {
 		return err
 	}
 
@@ -144,13 +157,16 @@ func UpdateProduct(c *fiber.Ctx) error {
 
 func DeleteProduct(c *fiber.Ctx) error {
 	db_con := c.Locals("db_con").(*gorm.DB)
-	o_id, err := strconv.Atoi(c.Params("id"))
+	product_id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return err
 	}
+	uint_product_id := uint(product_id)
 
-	ProductService := service.ProductService{DBCon: db_con}
-	if err := ProductService.DeleteProduct(o_id); err != nil {
+	ProductService := service.ProductService{
+		ProductRepo: &repository.ProductRespository{DBCon: db_con},
+	}
+	if err := ProductService.DeleteProduct(&uint_product_id); err != nil {
 		return err
 	}
 
