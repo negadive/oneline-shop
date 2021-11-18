@@ -25,7 +25,7 @@ func NewOrderRepository(DBCon *gorm.DB) IOrderRepository {
 }
 
 func (r *OrderRepository) Store(ctx context.Context, order *model.Order) error {
-	result := r.DBCon.Create(order)
+	result := r.DBCon.WithContext(ctx).Create(order)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -45,7 +45,7 @@ func (r *OrderRepository) StoreOrderProducts(ctx context.Context, order_id *uint
 
 		order_products = append(order_products, order_product)
 	}
-	if err := r.DBCon.Create(&order_products).Error; err != nil {
+	if err := r.DBCon.WithContext(ctx).Create(&order_products).Error; err != nil {
 		return err
 	}
 
