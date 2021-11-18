@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Order(app *fiber.App, db *gorm.DB, validate *validator.Validate) {
+func setupOrderHandler(db *gorm.DB, validate *validator.Validate) handler.IOrderHandler {
 	OrderRepo := repository.NewOrderRepository(db)
 	ProductRepo := repository.NewProductRepository(db)
 	OrderService := service.NewOrderService(OrderRepo, ProductRepo)
@@ -17,7 +17,12 @@ func Order(app *fiber.App, db *gorm.DB, validate *validator.Validate) {
 		OrderService,
 		validate,
 	)
+
+	return OrderHandler
+}
+
+func Order(app *fiber.App, OrderHandler handler.IOrderHandler) {
 	order := app.Group("/orders")
 
-	order.Post("/", handler.DbCon, OrderHandler.Store)
+	order.Post("/", OrderHandler.Store)
 }

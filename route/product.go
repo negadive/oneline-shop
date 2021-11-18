@@ -9,14 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
-func Product(app *fiber.App, db *gorm.DB, validate *validator.Validate) {
-
+func setupProductHandler(db *gorm.DB, validate *validator.Validate) handler.IProductHandler {
 	ProductRepo := repository.NewProductRepository(db)
 	ProductService := service.NewProductService(ProductRepo)
 	ProductHandler := handler.NewProductHandler(
 		ProductService,
 		validate,
 	)
+
+	return ProductHandler
+}
+
+func Product(app *fiber.App, ProductHandler handler.IProductHandler) {
 	product := app.Group("/products")
 
 	product.Post("/", ProductHandler.Store)

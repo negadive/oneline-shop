@@ -11,6 +11,6 @@ func Init(app *fiber.App, db *gorm.DB) {
 
 	User(app)
 	Auth(app)
-	Product(app, db, validate)
-	Order(app, db, validate)
+	Product(app, setupProductHandler(db, validate))
+	Order(app, setupOrderHandler(db, validate))
 }
