@@ -1,14 +1,29 @@
 package route
 
 import (
+	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/negadive/oneline/handler"
+	"github.com/negadive/oneline/repository"
+	"github.com/negadive/oneline/service"
+	"gorm.io/gorm"
 )
 
-func User(app *fiber.App) {
+func setupUserHandler(db *gorm.DB, validate *validator.Validate) handler.IUserHandler {
+	UserRepo := repository.NewUserRepository(db)
+	UserService := service.NewUserService(UserRepo)
+	UserHandler := handler.NewUserHandler(
+		UserService,
+		validate,
+	)
+
+	return UserHandler
+}
+
+func User(app *fiber.App, UserHandler handler.IUserHandler) {
 	user := app.Group("/users")
 
-	user.Post("/", handler.DbCon, handler.Register)
-	user.Patch("/:id", handler.DbCon, handler.UpdateUser)
+	user.Post("/", UserHandler.Register)
+	user.Patch("/:id", UserHandler.Update)
 
 }

@@ -12,8 +12,8 @@ type UserRegisterReq struct {
 }
 
 type UserUpdateReq struct {
-	Name     string `json:"name" validate:"min=4,max=100"`
-	Password string `json:"password" validate:"min=6,max=45"`
+	Name     string `json:"name,omitempty" validate:"min=4,max=100"`
+	Password string `json:"password,omitempty" validate:"min=6,max=45"`
 }
 
 /**************

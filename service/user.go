@@ -1,38 +1,52 @@
 package service
 
 import (
+	"context"
+
 	"github.com/negadive/oneline/model"
-	"github.com/negadive/oneline/schema"
+	"github.com/negadive/oneline/repository"
 	"gorm.io/gorm"
 )
 
+type IUserService interface {
+	Register(ctx context.Context, user *model.User) error
+	Update(ctx context.Context, user_id *uint, user *model.User) error
+}
+
 type UserService struct {
-	DBCon *gorm.DB
+	UserRepo repository.IUserRepository
 }
 
-func (c *UserService) Register(_user *schema.UserRegisterReq) (*model.User, error) {
-	user := model.User{Email: _user.Email, Name: _user.Name, Password: _user.Password}
-	result := c.DBCon.Create(&user)
-	if result.Error != nil {
-		return nil, result.Error
+func NewUserService(user_repo repository.IUserRepository) IUserService {
+	return &UserService{
+		UserRepo: user_repo,
 	}
-
-	return &user, nil
 }
 
-func (c *UserService) UpdateUser(_user *schema.UserUpdateReq, user_id int) (*model.User, error) {
-	var count int64
-	if c.DBCon.Model(&model.User{}).Where("id = ?", user_id).Count(&count); count < 1 {
-		return nil, gorm.ErrRecordNotFound
+func (s *UserService) Register(ctx context.Context, user *model.User) error {
+	if err := s.UserRepo.Store(ctx, user); err != nil {
+		return err
 	}
 
-	user := model.User{}
-	if err := c.DBCon.Model(&model.User{}).Where("id = ?", user_id).Updates(model.User{Name: _user.Name, Password: _user.Password}).Error; err != nil {
-		return nil, err
-	}
-	if err := c.DBCon.Where("id = ?", user_id).First(&user).Error; err != nil {
-		return nil, err
-	}
+	return nil
+}
 
-	return &user, nil
+func (s *UserService) Update(ctx context.Context, user_id *uint, user *model.User) error {
+	is_exists, err := s.UserRepo.IsExists(ctx, user_id)
+	if err != nil {
+		return err
+	}
+	if !is_exists {
+		return gorm.ErrRecordNotFound
+	}
+	if err := s.UserRepo.Update(ctx, user_id, user); err != nil {
+		return err
+	}
+	new_user, err := s.UserRepo.FindById(ctx, user_id)
+	if err != nil {
+		return err
+	}
+	*user = *new_user
+
+	return nil
 }

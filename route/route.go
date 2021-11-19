@@ -9,7 +9,7 @@ import (
 func Init(app *fiber.App, db *gorm.DB) {
 	validate := validator.New()
 
-	User(app)
+	User(app, setupUserHandler(db, validate))
 	Auth(app)
 	Product(app, setupProductHandler(db, validate))
 	Order(app, setupOrderHandler(db, validate))

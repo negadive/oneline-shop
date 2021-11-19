@@ -6,16 +6,33 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jinzhu/copier"
+	"github.com/negadive/oneline/model"
 	"github.com/negadive/oneline/schema"
 	"github.com/negadive/oneline/service"
-	"gorm.io/gorm"
 )
 
-func Register(c *fiber.Ctx) error {
-	db_con := c.Locals("db_con").(*gorm.DB)
+type IUserHandler interface {
+	Register(f_ctx *fiber.Ctx) error
+	Update(f_ctx *fiber.Ctx) error
+}
 
+type UserHandler struct {
+	UserService service.IUserService
+	Validate    *validator.Validate
+}
+
+func NewUserHandler(
+	user_service service.IUserService,
+	validate *validator.Validate,
+) IUserHandler {
+	return &UserHandler{
+		UserService: user_service,
+	}
+}
+
+func (h *UserHandler) Register(f_ctx *fiber.Ctx) error {
 	req_body := new(schema.UserRegisterReq)
-	if err := c.BodyParser(req_body); err != nil {
+	if err := f_ctx.BodyParser(req_body); err != nil {
 		return err
 	}
 	validate := validator.New()
@@ -23,48 +40,50 @@ func Register(c *fiber.Ctx) error {
 		return err
 	}
 
-	UserService := service.UserService{DBCon: db_con}
-	o, err := UserService.Register(req_body)
+	user := new(model.User)
+	copier.Copy(&user, &req_body)
+	err := h.UserService.Register(f_ctx.Context(), user)
 	if err != nil {
 		return err
 	}
 
 	res_body := new(schema.UserRegisterRes)
-	copier.Copy(&res_body, &o)
+	copier.Copy(&res_body, &user)
 
-	return c.Status(201).JSON(&res_body)
+	return f_ctx.Status(201).JSON(&res_body)
 }
 
-func UpdateUser(c *fiber.Ctx) error {
-	db_con := c.Locals("db_con").(*gorm.DB)
-	claims, err := extract_claims_from_jwt(c)
+func (h *UserHandler) Update(f_ctx *fiber.Ctx) error {
+	claims, err := extract_claims_from_jwt(f_ctx)
 	if err != nil {
 		return err
 	}
 	auth_user_id := uint(claims["id"].(float64))
-	o_id, err := strconv.Atoi(c.Params("id"))
+	user_id, err := strconv.Atoi(f_ctx.Params("id"))
 	if err != nil {
 		return err
 	}
+	uint_user_id := uint(user_id)
 
-	if int(auth_user_id) != o_id {
-		return c.JSON(fiber.Map{
+	if int(auth_user_id) != user_id {
+		return f_ctx.JSON(fiber.Map{
 			"message": "Cannot update this user",
 		})
 	}
 	req_body := new(schema.UserUpdateReq)
-	if err := c.BodyParser(req_body); err != nil {
+	if err := f_ctx.BodyParser(req_body); err != nil {
 		return err
 	}
 
-	UserService := service.UserService{DBCon: db_con}
-	o, err := UserService.UpdateUser(req_body, o_id)
+	user := new(model.User)
+	copier.Copy(&user, &req_body)
+	err = h.UserService.Update(f_ctx.Context(), &uint_user_id, user)
 	if err != nil {
 		return err
 	}
 
 	res_body := new(schema.UserUpdateRes)
-	copier.Copy(&res_body, &o)
+	copier.Copy(&res_body, &user)
 
-	return c.JSON(res_body)
+	return f_ctx.JSON(res_body)
 }
