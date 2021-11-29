@@ -1,18 +1,22 @@
 package handler
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
+	"github.com/negadive/oneline/custom_errors"
 )
 
 func Error(c *fiber.Ctx, err error) error {
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if nf_e, ok := err.(*custom_errors.NotFoundError); ok {
 		return c.Status(404).JSON(fiber.Map{
-			"message": "resource not found",
+			"message":  "resource not found",
+			"resource": nf_e.Resource,
+		})
+	} else if f_e, ok := err.(*custom_errors.ForbiddenUser); ok {
+		return c.Status(403).JSON(fiber.Map{
+			"message": f_e.Error(),
 		})
 	} else if strings.Contains(err.Error(), "duplicate key") {
 		return c.Status(409).JSON(fiber.Map{

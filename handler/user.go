@@ -65,11 +65,6 @@ func (h *UserHandler) Update(f_ctx *fiber.Ctx) error {
 	}
 	uint_user_id := uint(user_id)
 
-	if int(auth_user_id) != user_id {
-		return f_ctx.JSON(fiber.Map{
-			"message": "Cannot update this user",
-		})
-	}
 	req_body := new(schema.UserUpdateReq)
 	if err := f_ctx.BodyParser(req_body); err != nil {
 		return err
@@ -77,7 +72,7 @@ func (h *UserHandler) Update(f_ctx *fiber.Ctx) error {
 
 	user := new(model.User)
 	copier.Copy(&user, &req_body)
-	err = h.UserService.Update(f_ctx.Context(), &uint_user_id, user)
+	err = h.UserService.Update(f_ctx.Context(), &auth_user_id, &uint_user_id, user)
 	if err != nil {
 		return err
 	}

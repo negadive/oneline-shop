@@ -32,6 +32,8 @@ func (h *OrderHandler) Store(f_ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	auth_user_id := uint(claims["id"].(float64))
+
 	req_body := new(schema.OrderStoreReq)
 	if err := f_ctx.BodyParser(&req_body); err != nil {
 		return err
@@ -43,8 +45,8 @@ func (h *OrderHandler) Store(f_ctx *fiber.Ctx) error {
 
 	order := new(model.Order)
 	copier.Copy(&order, &req_body)
-	order.CustomerID = uint(claims["id"].(float64))
-	if err := h.OrderService.Store(f_ctx.Context(), order, &req_body.ProductIDs); err != nil {
+	order.CustomerID = auth_user_id
+	if err := h.OrderService.Store(f_ctx.Context(), &auth_user_id, order, &req_body.ProductIDs); err != nil {
 		return err
 	}
 

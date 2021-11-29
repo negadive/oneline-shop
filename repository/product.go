@@ -3,36 +3,32 @@ package repository
 import (
 	"context"
 
+	"github.com/negadive/oneline/custom_errors"
 	"github.com/negadive/oneline/model"
 	"gorm.io/gorm"
 )
 
 type IProductRepository interface {
-	Store(ctx context.Context, product *model.Product) error
-	Update(ctx context.Context, product_id *uint, product *model.Product) error
-	Delete(ctx context.Context, product_id *uint) error
-	FindById(ctx context.Context, product_id *uint) (*model.Product, error)
-	FindAll(ctx context.Context) (*[]model.Product, error)
-	FindAllOwnerByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error)
-	IsExists(ctx context.Context, product_id *uint) bool
-	ProductWithOwnerExists(ctx context.Context, product_id *uint, owner_id *uint) bool
-	FindByIds(ctx context.Context, products *[]model.Product, product_ids *[]uint) error
+	Store(ctx context.Context, tx *gorm.DB, product *model.Product) error
+	Update(ctx context.Context, tx *gorm.DB, product_id *uint, product *model.Product) error
+	Delete(ctx context.Context, tx *gorm.DB, product_id *uint) error
+	FindById(ctx context.Context, tx *gorm.DB, product_id *uint) (*model.Product, error)
+	FindAll(ctx context.Context, tx *gorm.DB) (*[]model.Product, error)
+	FindAllOwnerByUser(ctx context.Context, tx *gorm.DB, owner_id *uint) (*[]model.Product, error)
+	IsExists(ctx context.Context, tx *gorm.DB, product_id *uint) bool
+	ProductWithOwnerExists(ctx context.Context, tx *gorm.DB, product_id *uint, owner_id *uint) bool
+	FindByIds(ctx context.Context, tx *gorm.DB, products *[]model.Product, product_ids *[]uint) error
 }
 
 type ProductRepository struct {
-	DBCon *gorm.DB
 }
 
-func NewProductRepository(DBCon *gorm.DB) IProductRepository {
-	r := ProductRepository{
-		DBCon: DBCon,
-	}
-
-	return &r
+func NewProductRepository() IProductRepository {
+	return &ProductRepository{}
 }
 
-func (repo *ProductRepository) Store(ctx context.Context, product *model.Product) error {
-	result := repo.DBCon.WithContext(ctx).Create(&product)
+func (repo *ProductRepository) Store(ctx context.Context, tx *gorm.DB, product *model.Product) error {
+	result := tx.WithContext(ctx).Create(&product)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -40,35 +36,35 @@ func (repo *ProductRepository) Store(ctx context.Context, product *model.Product
 	return nil
 }
 
-func (repo *ProductRepository) Update(ctx context.Context, product_id *uint, product *model.Product) error {
-	if err := repo.DBCon.WithContext(ctx).Model(&model.Product{}).Where("id = ?", *product_id).Updates(&product).Error; err != nil {
+func (repo *ProductRepository) Update(ctx context.Context, tx *gorm.DB, product_id *uint, product *model.Product) error {
+	if err := tx.WithContext(ctx).Model(&model.Product{}).Where("id = ?", *product_id).Updates(&product).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (repo *ProductRepository) Delete(ctx context.Context, product_id *uint) error {
-	if err := repo.DBCon.WithContext(ctx).Delete(&model.Product{}, product_id).Error; err != nil {
+func (repo *ProductRepository) Delete(ctx context.Context, tx *gorm.DB, product_id *uint) error {
+	if err := tx.WithContext(ctx).Delete(&model.Product{}, product_id).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (repo *ProductRepository) FindById(ctx context.Context, product_id *uint) (*model.Product, error) {
+func (repo *ProductRepository) FindById(ctx context.Context, tx *gorm.DB, product_id *uint) (*model.Product, error) {
 	product := model.Product{}
-	result := repo.DBCon.WithContext(ctx).First(&product, product_id)
+	result := tx.WithContext(ctx).First(&product, product_id)
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, custom_errors.NewNotFoundError("product")
 	}
 
 	return &product, nil
 }
 
-func (repo *ProductRepository) FindAll(ctx context.Context) (*[]model.Product, error) {
+func (repo *ProductRepository) FindAll(ctx context.Context, tx *gorm.DB) (*[]model.Product, error) {
 	products := []model.Product{}
-	result := repo.DBCon.WithContext(ctx).Model(&model.Product{}).Find(&products)
+	result := tx.WithContext(ctx).Model(&model.Product{}).Find(&products)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -77,9 +73,9 @@ func (repo *ProductRepository) FindAll(ctx context.Context) (*[]model.Product, e
 	return &products, nil
 }
 
-func (repo *ProductRepository) FindAllOwnerByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error) {
+func (repo *ProductRepository) FindAllOwnerByUser(ctx context.Context, tx *gorm.DB, owner_id *uint) (*[]model.Product, error) {
 	products := []model.Product{}
-	result := repo.DBCon.WithContext(ctx).Model(&model.Product{}).Where("owner_id = ?", owner_id).Find(&products)
+	result := tx.WithContext(ctx).Model(&model.Product{}).Where("owner_id = ?", owner_id).Find(&products)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -88,9 +84,9 @@ func (repo *ProductRepository) FindAllOwnerByUser(ctx context.Context, owner_id 
 	return &products, nil
 }
 
-func (repo *ProductRepository) IsExists(ctx context.Context, product_id *uint) bool {
+func (repo *ProductRepository) IsExists(ctx context.Context, tx *gorm.DB, product_id *uint) bool {
 	var count int64
-	if repo.DBCon.WithContext(ctx).Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
+	if tx.WithContext(ctx).Model(&model.Product{}).Where("id = ?", product_id).Count(&count); count < 1 {
 		return false
 	}
 
@@ -98,16 +94,16 @@ func (repo *ProductRepository) IsExists(ctx context.Context, product_id *uint) b
 
 }
 
-func (repo *ProductRepository) ProductWithOwnerExists(ctx context.Context, product_id *uint, owner_id *uint) bool {
+func (repo *ProductRepository) ProductWithOwnerExists(ctx context.Context, tx *gorm.DB, product_id *uint, owner_id *uint) bool {
 	var count int64
 
-	repo.DBCon.WithContext(ctx).Model(&model.Product{}).Where("id = ?", *product_id).Where("owner_id = ?", *owner_id).Count(&count)
+	tx.WithContext(ctx).Model(&model.Product{}).Where("id = ?", *product_id).Where("owner_id = ?", *owner_id).Count(&count)
 
 	return count == 1
 }
 
-func (repo *ProductRepository) FindByIds(ctx context.Context, products *[]model.Product, product_ids *[]uint) error {
-	if err := repo.DBCon.WithContext(ctx).Model(&model.Product{}).Find(products, product_ids).Error; err != nil {
+func (repo *ProductRepository) FindByIds(ctx context.Context, tx *gorm.DB, products *[]model.Product, product_ids *[]uint) error {
+	if err := tx.WithContext(ctx).Model(&model.Product{}).Find(products, product_ids).Error; err != nil {
 		return err
 	}
 

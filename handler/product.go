@@ -25,12 +25,10 @@ type ProductHandler struct {
 }
 
 func NewProductHandler(product_service service.IProductService, validate *validator.Validate) IProductHandler {
-	h := ProductHandler{
+	return &ProductHandler{
 		ProductService: product_service,
 		Validate:       validate,
 	}
-
-	return &h
 }
 
 func (h *ProductHandler) Store(f_ctx *fiber.Ctx) error {
@@ -38,6 +36,7 @@ func (h *ProductHandler) Store(f_ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	auth_user_id := uint(claims["id"].(float64))
 
 	req_body := new(schema.ProductStoreReq)
 	if err := f_ctx.BodyParser(&req_body); err != nil {
@@ -46,15 +45,10 @@ func (h *ProductHandler) Store(f_ctx *fiber.Ctx) error {
 	if err := h.Validate.Struct(req_body); err != nil {
 		return err
 	}
-	if auth_user_id := uint(claims["id"].(float64)); req_body.OwnerID != auth_user_id {
-		return f_ctx.Status(403).JSON(fiber.Map{
-			"message": "Cannot store product for this owner",
-		})
-	}
 
 	product := new(model.Product)
 	copier.Copy(&product, &req_body)
-	if err := h.ProductService.Store(f_ctx.Context(), product); err != nil {
+	if err := h.ProductService.Store(f_ctx.Context(), &auth_user_id, product); err != nil {
 		return err
 	}
 
@@ -117,7 +111,8 @@ func (h *ProductHandler) Update(f_ctx *fiber.Ctx) error {
 		return err
 	}
 	auth_user_id := uint(claims["id"].(float64))
-	product_id, err := strconv.Atoi(f_ctx.Params("id"))
+
+	product_id, err := f_ctx.ParamsInt("id")
 	if err != nil {
 		return err
 	}
@@ -130,15 +125,10 @@ func (h *ProductHandler) Update(f_ctx *fiber.Ctx) error {
 	if err := h.Validate.Struct(req_body); err != nil {
 		return err
 	}
-	if !h.ProductService.GetProductRepo().ProductWithOwnerExists(f_ctx.Context(), &uint_product_id, &auth_user_id) {
-		return f_ctx.Status(404).JSON(fiber.Map{
-			"message": "No product found for this owner",
-		})
-	}
 
 	product := new(model.Product)
 	copier.Copy(&product, &req_body)
-	if err := h.ProductService.Update(f_ctx.Context(), &uint_product_id, product); err != nil {
+	if err := h.ProductService.Update(f_ctx.Context(), &auth_user_id, &uint_product_id, product); err != nil {
 		return err
 	}
 
@@ -149,13 +139,19 @@ func (h *ProductHandler) Update(f_ctx *fiber.Ctx) error {
 }
 
 func (h *ProductHandler) Delete(f_ctx *fiber.Ctx) error {
-	product_id, err := strconv.Atoi(f_ctx.Params("id"))
+	claims, err := extract_claims_from_jwt(f_ctx)
+	if err != nil {
+		return err
+	}
+	auth_user_id := uint(claims["id"].(float64))
+
+	product_id, err := f_ctx.ParamsInt("id")
 	if err != nil {
 		return err
 	}
 	uint_product_id := uint(product_id)
 
-	if err := h.ProductService.Delete(f_ctx.Context(), &uint_product_id); err != nil {
+	if err := h.ProductService.Delete(f_ctx.Context(), &auth_user_id, &uint_product_id); err != nil {
 		return err
 	}
 

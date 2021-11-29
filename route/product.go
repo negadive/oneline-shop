@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/negadive/oneline/authorizer"
 	"github.com/negadive/oneline/handler"
 	"github.com/negadive/oneline/repository"
 	"github.com/negadive/oneline/service"
@@ -10,12 +11,10 @@ import (
 )
 
 func setupProductHandler(db *gorm.DB, validate *validator.Validate) handler.IProductHandler {
-	ProductRepo := repository.NewProductRepository(db)
-	ProductService := service.NewProductService(ProductRepo)
-	ProductHandler := handler.NewProductHandler(
-		ProductService,
-		validate,
-	)
+	ProductRepo := repository.NewProductRepository()
+	ProductAuthzer := authorizer.NewProductAuthorizer(ProductRepo)
+	ProductService := service.NewProductService(db, ProductAuthzer, ProductRepo)
+	ProductHandler := handler.NewProductHandler(ProductService, validate)
 
 	return ProductHandler
 }

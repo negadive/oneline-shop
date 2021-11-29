@@ -8,24 +8,20 @@ import (
 )
 
 type IOrderRepository interface {
-	Store(ctx context.Context, order *model.Order) error
-	StoreOrderProducts(ctx context.Context, order_id *uint, products *[]model.Product) error
+	Store(ctx context.Context, tx *gorm.DB, order *model.Order) error
+	StoreOrderProducts(ctx context.Context, tx *gorm.DB, order_id *uint, products *[]model.Product) error
 }
 
-type OrderRepository struct {
-	DBCon *gorm.DB
-}
+type OrderRepository struct{}
 
-func NewOrderRepository(DBCon *gorm.DB) IOrderRepository {
-	r := OrderRepository{
-		DBCon: DBCon,
-	}
+func NewOrderRepository() IOrderRepository {
+	r := OrderRepository{}
 
 	return &r
 }
 
-func (r *OrderRepository) Store(ctx context.Context, order *model.Order) error {
-	result := r.DBCon.WithContext(ctx).Create(order)
+func (r *OrderRepository) Store(ctx context.Context, tx *gorm.DB, order *model.Order) error {
+	result := tx.WithContext(ctx).Create(order)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -33,7 +29,7 @@ func (r *OrderRepository) Store(ctx context.Context, order *model.Order) error {
 	return nil
 }
 
-func (r *OrderRepository) StoreOrderProducts(ctx context.Context, order_id *uint, products *[]model.Product) error {
+func (r *OrderRepository) StoreOrderProducts(ctx context.Context, tx *gorm.DB, order_id *uint, products *[]model.Product) error {
 	order_products := []model.OrderProduct{}
 	for _, product := range *products {
 		order_product := model.OrderProduct{
@@ -45,7 +41,7 @@ func (r *OrderRepository) StoreOrderProducts(ctx context.Context, order_id *uint
 
 		order_products = append(order_products, order_product)
 	}
-	if err := r.DBCon.WithContext(ctx).Create(&order_products).Error; err != nil {
+	if err := tx.WithContext(ctx).Create(&order_products).Error; err != nil {
 		return err
 	}
 
