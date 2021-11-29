@@ -9,7 +9,7 @@ import (
 
 type IOrderRepository interface {
 	Store(ctx context.Context, tx *gorm.DB, order *model.Order) error
-	StoreOrderProducts(ctx context.Context, tx *gorm.DB, order_id *uint, products *[]model.Product) error
+	StoreOrderProducts(ctx context.Context, tx *gorm.DB, orderId *uint, products *[]model.Product) error
 }
 
 type OrderRepository struct{}
@@ -29,11 +29,11 @@ func (r *OrderRepository) Store(ctx context.Context, tx *gorm.DB, order *model.O
 	return nil
 }
 
-func (r *OrderRepository) StoreOrderProducts(ctx context.Context, tx *gorm.DB, order_id *uint, products *[]model.Product) error {
+func (r *OrderRepository) StoreOrderProducts(ctx context.Context, tx *gorm.DB, orderId *uint, products *[]model.Product) error {
 	order_products := []model.OrderProduct{}
 	for _, product := range *products {
 		order_product := model.OrderProduct{
-			OrderID:     *order_id,
+			OrderID:     *orderId,
 			ProductID:   product.ID,
 			ProductName: product.Name,
 			Price:       product.Price,

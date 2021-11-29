@@ -11,54 +11,54 @@ import (
 )
 
 type IOrderService interface {
-	Store(ctx context.Context, actor_id *uint, order *model.Order, product_ids *[]uint) error
+	Store(ctx context.Context, actorId *uint, order *model.Order, productIds *[]uint) error
 }
 
 type OrderService struct {
-	DBCon        *gorm.DB
+	dBCon        *gorm.DB
 	orderAuthzer authorizer.IOrderAuthorizer
-	OrderRepo    repository.IOrderRepository
-	ProductRepo  repository.IProductRepository
+	orderRepo    repository.IOrderRepository
+	productRepo  repository.IProductRepository
 }
 
 func NewOrderService(
-	db_con *gorm.DB,
+	dBCon *gorm.DB,
 	orderAuthzer authorizer.IOrderAuthorizer,
-	order_repo repository.IOrderRepository,
-	product_repo repository.IProductRepository,
+	orderRepo repository.IOrderRepository,
+	productRepo repository.IProductRepository,
 ) IOrderService {
 	return &OrderService{
-		DBCon:        db_con,
+		dBCon:        dBCon,
 		orderAuthzer: orderAuthzer,
-		OrderRepo:    order_repo,
-		ProductRepo:  product_repo,
+		orderRepo:    orderRepo,
+		productRepo:  productRepo,
 	}
 }
 
-func (s *OrderService) Store(ctx context.Context, actor_id *uint, order *model.Order, product_ids *[]uint) error {
-	tx := s.DBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
+func (s *OrderService) Store(ctx context.Context, actorId *uint, order *model.Order, productIds *[]uint) error {
+	tx := s.dBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
 	defer tx.Commit()
 
 	products := []model.Product{}
-	if err := s.ProductRepo.FindByIds(ctx, tx, &products, product_ids); err != nil {
+	if err := s.productRepo.FindByIds(ctx, tx, &products, productIds); err != nil {
 		return err
 	}
-	if len(products) != len(*product_ids) {
+	if len(products) != len(*productIds) {
 		tx.Rollback()
 		return errors.New("some products not found")
 	}
-	total_price := 0.0
+	totalPrice := 0.0
 	for _, product := range products {
-		total_price += product.Price
+		totalPrice += product.Price
 	}
 
 	order.Status = "CREATED"
-	order.TotalPrice = total_price
-	if err := s.OrderRepo.Store(ctx, tx, order); err != nil {
+	order.TotalPrice = totalPrice
+	if err := s.orderRepo.Store(ctx, tx, order); err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := s.OrderRepo.StoreOrderProducts(ctx, tx, &order.ID, &products); err != nil {
+	if err := s.orderRepo.StoreOrderProducts(ctx, tx, &order.ID, &products); err != nil {
 		tx.Rollback()
 		return err
 	}

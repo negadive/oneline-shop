@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/negadive/oneline/authorizer"
-	"github.com/negadive/oneline/custom_errors"
+	"github.com/negadive/oneline/customErrors"
 	"github.com/negadive/oneline/model"
 	"github.com/negadive/oneline/repository"
 	"gorm.io/gorm"
@@ -12,28 +12,32 @@ import (
 
 type IUserService interface {
 	Register(ctx context.Context, user *model.User) error
-	Update(ctx context.Context, actor_id *uint, user_id *uint, user *model.User) error
+	Update(ctx context.Context, actorId *uint, user_id *uint, user *model.User) error
 }
 
 type UserService struct {
-	DBCon       *gorm.DB
-	UserAuthzer authorizer.IUserAuthorizer
-	UserRepo    repository.IUserRepository
+	dBCon       *gorm.DB
+	userAuthzer authorizer.IUserAuthorizer
+	userRepo    repository.IUserRepository
 }
 
-func NewUserService(db_con *gorm.DB, userAuthzer authorizer.IUserAuthorizer, user_repo repository.IUserRepository) IUserService {
+func NewUserService(
+	dbCon *gorm.DB,
+	userAuthzer authorizer.IUserAuthorizer,
+	userRepo repository.IUserRepository,
+) IUserService {
 	return &UserService{
-		DBCon:       db_con,
-		UserAuthzer: userAuthzer,
-		UserRepo:    user_repo,
+		dBCon:       dbCon,
+		userAuthzer: userAuthzer,
+		userRepo:    userRepo,
 	}
 }
 
 func (s *UserService) Register(ctx context.Context, user *model.User) error {
-	tx := s.DBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
+	tx := s.dBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
 	defer tx.Commit()
 
-	if err := s.UserRepo.Store(ctx, tx, user); err != nil {
+	if err := s.userRepo.Store(ctx, tx, user); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -41,24 +45,24 @@ func (s *UserService) Register(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (s *UserService) Update(ctx context.Context, actor_id *uint, user_id *uint, user *model.User) error {
-	tx := s.DBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
+func (s *UserService) Update(ctx context.Context, actorId *uint, user_id *uint, user *model.User) error {
+	tx := s.dBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
 	defer tx.Commit()
 
-	old_user, err := s.UserRepo.FindById(ctx, tx, user_id)
+	oldUser, err := s.userRepo.FindById(ctx, tx, user_id)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	if !s.UserAuthzer.CanEdit(old_user, actor_id) {
+	if !s.userAuthzer.CanEdit(oldUser, actorId) {
 		tx.Rollback()
-		return custom_errors.NewForbiddenUser("not user data")
+		return customErrors.NewForbiddenUser("not user data")
 	}
-	if err := s.UserRepo.Update(ctx, tx, user_id, user); err != nil {
+	if err := s.userRepo.Update(ctx, tx, user_id, user); err != nil {
 		tx.Rollback()
 		return err
 	}
-	new_user, err := s.UserRepo.FindById(ctx, tx, user_id)
+	new_user, err := s.userRepo.FindById(ctx, tx, user_id)
 	if err != nil {
 		tx.Rollback()
 		return err

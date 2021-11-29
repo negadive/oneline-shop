@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"strconv"
-
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jinzhu/copier"
@@ -12,73 +10,72 @@ import (
 )
 
 type IUserHandler interface {
-	Register(f_ctx *fiber.Ctx) error
-	Update(f_ctx *fiber.Ctx) error
+	Register(fCtx *fiber.Ctx) error
+	Update(fCtx *fiber.Ctx) error
 }
 
 type UserHandler struct {
-	UserService service.IUserService
-	Validate    *validator.Validate
+	userService service.IUserService
+	validate    *validator.Validate
 }
 
 func NewUserHandler(
-	user_service service.IUserService,
+	userService service.IUserService,
 	validate *validator.Validate,
 ) IUserHandler {
 	return &UserHandler{
-		UserService: user_service,
+		userService: userService,
 	}
 }
 
-func (h *UserHandler) Register(f_ctx *fiber.Ctx) error {
-	req_body := new(schema.UserRegisterReq)
-	if err := f_ctx.BodyParser(req_body); err != nil {
+func (h *UserHandler) Register(fCtx *fiber.Ctx) error {
+	reqBody := new(schema.UserRegisterReq)
+	if err := fCtx.BodyParser(reqBody); err != nil {
 		return err
 	}
-	validate := validator.New()
-	if err := validate.Struct(req_body); err != nil {
+	if err := h.validate.Struct(reqBody); err != nil {
 		return err
 	}
 
 	user := new(model.User)
-	copier.Copy(&user, &req_body)
-	err := h.UserService.Register(f_ctx.Context(), user)
+	copier.Copy(&user, &reqBody)
+	err := h.userService.Register(fCtx.Context(), user)
 	if err != nil {
 		return err
 	}
 
-	res_body := new(schema.UserRegisterRes)
-	copier.Copy(&res_body, &user)
+	resBody := new(schema.UserRegisterRes)
+	copier.Copy(&resBody, &user)
 
-	return f_ctx.Status(201).JSON(&res_body)
+	return fCtx.Status(201).JSON(&resBody)
 }
 
-func (h *UserHandler) Update(f_ctx *fiber.Ctx) error {
-	claims, err := extract_claims_from_jwt(f_ctx)
+func (h *UserHandler) Update(fCtx *fiber.Ctx) error {
+	claims, err := extractClaimsFromJwt(fCtx)
 	if err != nil {
 		return err
 	}
-	auth_user_id := uint(claims["id"].(float64))
-	user_id, err := strconv.Atoi(f_ctx.Params("id"))
+	authUserId := uint(claims["id"].(float64))
+	userId, err := fCtx.ParamsInt("id")
 	if err != nil {
 		return err
 	}
-	uint_user_id := uint(user_id)
+	uintUserId := uint(userId)
 
-	req_body := new(schema.UserUpdateReq)
-	if err := f_ctx.BodyParser(req_body); err != nil {
+	reqBody := new(schema.UserUpdateReq)
+	if err := fCtx.BodyParser(reqBody); err != nil {
 		return err
 	}
 
 	user := new(model.User)
-	copier.Copy(&user, &req_body)
-	err = h.UserService.Update(f_ctx.Context(), &auth_user_id, &uint_user_id, user)
+	copier.Copy(&user, &reqBody)
+	err = h.userService.Update(fCtx.Context(), &authUserId, &uintUserId, user)
 	if err != nil {
 		return err
 	}
 
-	res_body := new(schema.UserUpdateRes)
-	copier.Copy(&res_body, &user)
+	resBody := new(schema.UserUpdateRes)
+	copier.Copy(&resBody, &user)
 
-	return f_ctx.JSON(res_body)
+	return fCtx.JSON(resBody)
 }

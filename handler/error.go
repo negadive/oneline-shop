@@ -5,30 +5,30 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/gofiber/fiber/v2"
-	"github.com/negadive/oneline/custom_errors"
+	"github.com/negadive/oneline/customErrors"
 )
 
 func Error(c *fiber.Ctx, err error) error {
-	if nf_e, ok := err.(*custom_errors.NotFoundError); ok {
+	if nfE, ok := err.(*customErrors.NotFoundError); ok {
 		return c.Status(404).JSON(fiber.Map{
 			"message":  "resource not found",
-			"resource": nf_e.Resource,
+			"resource": nfE.Resource,
 		})
-	} else if f_e, ok := err.(*custom_errors.ForbiddenUser); ok {
+	} else if fE, ok := err.(*customErrors.ForbiddenUser); ok {
 		return c.Status(403).JSON(fiber.Map{
-			"message": f_e.Error(),
+			"message": fE.Error(),
 		})
 	} else if strings.Contains(err.Error(), "duplicate key") {
 		return c.Status(409).JSON(fiber.Map{
 			"message": "duplicate resource",
 		})
-	} else if v_err, ok := err.(validator.ValidationErrors); ok {
+	} else if vErr, ok := err.(validator.ValidationErrors); ok {
 		var details []map[string]interface{}
-		for _, v_err2 := range v_err {
+		for _, vErr2 := range vErr {
 			detail := map[string]interface{}{
-				"field": v_err2.StructNamespace(),
-				"tag":   v_err2.Tag(),
-				"value": v_err2.Param(),
+				"field": vErr2.StructNamespace(),
+				"tag":   vErr2.Tag(),
+				"value": vErr2.Param(),
 			}
 			details = append(details, detail)
 		}
@@ -37,9 +37,9 @@ func Error(c *fiber.Ctx, err error) error {
 			"message": "invalid data",
 			"details": details,
 		})
-	} else if err_text := err.Error(); err_text == "Unprocessable Entity" {
+	} else if errText := err.Error(); errText == "Unprocessable Entity" {
 		return c.Status(400).JSON(fiber.Map{
-			"message": err_text,
+			"message": errText,
 		})
 	}
 

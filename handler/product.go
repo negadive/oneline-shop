@@ -12,148 +12,148 @@ import (
 )
 
 type IProductHandler interface {
-	GetOne(f_ctx *fiber.Ctx) error
-	Store(f_ctx *fiber.Ctx) error
-	Update(f_ctx *fiber.Ctx) error
-	Delete(f_ctx *fiber.Ctx) error
-	FindAll(f_ctx *fiber.Ctx) error
-	FindAllByUser(f_ctx *fiber.Ctx) error
+	GetOne(fCtx *fiber.Ctx) error
+	Store(fCtx *fiber.Ctx) error
+	Update(fCtx *fiber.Ctx) error
+	Delete(fCtx *fiber.Ctx) error
+	FindAll(fCtx *fiber.Ctx) error
+	FindAllByUser(fCtx *fiber.Ctx) error
 }
 type ProductHandler struct {
-	ProductService service.IProductService
+	productService service.IProductService
 	Validate       *validator.Validate
 }
 
-func NewProductHandler(product_service service.IProductService, validate *validator.Validate) IProductHandler {
+func NewProductHandler(productService service.IProductService, validate *validator.Validate) IProductHandler {
 	return &ProductHandler{
-		ProductService: product_service,
+		productService: productService,
 		Validate:       validate,
 	}
 }
 
-func (h *ProductHandler) Store(f_ctx *fiber.Ctx) error {
-	claims, err := extract_claims_from_jwt(f_ctx)
+func (h *ProductHandler) Store(fCtx *fiber.Ctx) error {
+	claims, err := extractClaimsFromJwt(fCtx)
 	if err != nil {
 		return err
 	}
-	auth_user_id := uint(claims["id"].(float64))
+	authUserId := uint(claims["id"].(float64))
 
-	req_body := new(schema.ProductStoreReq)
-	if err := f_ctx.BodyParser(&req_body); err != nil {
+	reqBody := new(schema.ProductStoreReq)
+	if err := fCtx.BodyParser(&reqBody); err != nil {
 		return err
 	}
-	if err := h.Validate.Struct(req_body); err != nil {
+	if err := h.Validate.Struct(reqBody); err != nil {
 		return err
 	}
 
 	product := new(model.Product)
-	copier.Copy(&product, &req_body)
-	if err := h.ProductService.Store(f_ctx.Context(), &auth_user_id, product); err != nil {
+	copier.Copy(&product, &reqBody)
+	if err := h.productService.Store(fCtx.Context(), &authUserId, product); err != nil {
 		return err
 	}
 
-	res_body := new(schema.ProductStoreRes)
-	copier.Copy(&res_body, &product)
+	resBody := new(schema.ProductStoreRes)
+	copier.Copy(&resBody, &product)
 
-	return f_ctx.Status(201).JSON(&res_body)
+	return fCtx.Status(201).JSON(&resBody)
 }
 
-func (h *ProductHandler) GetOne(f_ctx *fiber.Ctx) error {
-	product_id, err := strconv.Atoi(f_ctx.Params("id"))
+func (h *ProductHandler) GetOne(fCtx *fiber.Ctx) error {
+	productId, err := strconv.Atoi(fCtx.Params("id"))
 	if err != nil {
 		return err
 	}
-	uint_product_id := uint(product_id)
-	product, err := h.ProductService.GetOne(f_ctx.Context(), &uint_product_id)
+	uintProductId := uint(productId)
+	product, err := h.productService.GetOne(fCtx.Context(), &uintProductId)
 	if err != nil {
 		return err
 	}
 
-	res_body := new(schema.ProductGetOneRes)
-	copier.Copy(&res_body, &product)
+	resBody := new(schema.ProductGetOneRes)
+	copier.Copy(&resBody, &product)
 
-	return f_ctx.Status(200).JSON(&res_body)
+	return fCtx.Status(200).JSON(&resBody)
 }
 
-func (h *ProductHandler) FindAll(f_ctx *fiber.Ctx) error {
-	product, err := h.ProductService.FindAll(f_ctx.Context())
+func (h *ProductHandler) FindAll(fCtx *fiber.Ctx) error {
+	product, err := h.productService.FindAll(fCtx.Context())
 	if err != nil {
 		return err
 	}
 
-	res_body := new([]schema.ProductListRes)
-	copier.Copy(&res_body, &product)
+	resBody := new([]schema.ProductListRes)
+	copier.Copy(&resBody, &product)
 
-	return f_ctx.JSON(&res_body)
+	return fCtx.JSON(&resBody)
 }
 
 func (h *ProductHandler) FindAllByUser(c *fiber.Ctx) error {
-	owner_id, err := strconv.Atoi(c.Params("user_id"))
+	ownerId, err := c.ParamsInt("user_id")
 	if err != nil {
 		return err
 	}
-	uint_owner_id := uint(owner_id)
+	uintOwnerId := uint(ownerId)
 
-	product, err := h.ProductService.FindAllByUser(c.Context(), &uint_owner_id)
+	product, err := h.productService.FindAllByUser(c.Context(), &uintOwnerId)
 	if err != nil {
 		return err
 	}
 
-	res_body := new([]schema.ProductListRes)
-	copier.Copy(&res_body, &product)
+	resBody := new([]schema.ProductListRes)
+	copier.Copy(&resBody, &product)
 
-	return c.JSON(&res_body)
+	return c.JSON(&resBody)
 }
 
-func (h *ProductHandler) Update(f_ctx *fiber.Ctx) error {
-	claims, err := extract_claims_from_jwt(f_ctx)
+func (h *ProductHandler) Update(fCtx *fiber.Ctx) error {
+	claims, err := extractClaimsFromJwt(fCtx)
 	if err != nil {
 		return err
 	}
-	auth_user_id := uint(claims["id"].(float64))
+	authUserId := uint(claims["id"].(float64))
 
-	product_id, err := f_ctx.ParamsInt("id")
+	productId, err := fCtx.ParamsInt("id")
 	if err != nil {
 		return err
 	}
-	uint_product_id := uint(product_id)
+	uintProductId := uint(productId)
 
-	req_body := new(schema.ProductUpdateReq)
-	if err := f_ctx.BodyParser(&req_body); err != nil {
+	reqBody := new(schema.ProductUpdateReq)
+	if err := fCtx.BodyParser(&reqBody); err != nil {
 		return err
 	}
-	if err := h.Validate.Struct(req_body); err != nil {
+	if err := h.Validate.Struct(reqBody); err != nil {
 		return err
 	}
 
 	product := new(model.Product)
-	copier.Copy(&product, &req_body)
-	if err := h.ProductService.Update(f_ctx.Context(), &auth_user_id, &uint_product_id, product); err != nil {
+	copier.Copy(&product, &reqBody)
+	if err := h.productService.Update(fCtx.Context(), &authUserId, &uintProductId, product); err != nil {
 		return err
 	}
 
-	res_body := new(schema.ProductUpdateRes)
-	copier.Copy(&res_body, &product)
+	resBody := new(schema.ProductUpdateRes)
+	copier.Copy(&resBody, &product)
 
-	return f_ctx.JSON(&res_body)
+	return fCtx.JSON(&resBody)
 }
 
-func (h *ProductHandler) Delete(f_ctx *fiber.Ctx) error {
-	claims, err := extract_claims_from_jwt(f_ctx)
+func (h *ProductHandler) Delete(fCtx *fiber.Ctx) error {
+	claims, err := extractClaimsFromJwt(fCtx)
 	if err != nil {
 		return err
 	}
-	auth_user_id := uint(claims["id"].(float64))
+	authUserId := uint(claims["id"].(float64))
 
-	product_id, err := f_ctx.ParamsInt("id")
+	productId, err := fCtx.ParamsInt("id")
 	if err != nil {
 		return err
 	}
-	uint_product_id := uint(product_id)
+	uintProductId := uint(productId)
 
-	if err := h.ProductService.Delete(f_ctx.Context(), &auth_user_id, &uint_product_id); err != nil {
+	if err := h.productService.Delete(fCtx.Context(), &authUserId, &uintProductId); err != nil {
 		return err
 	}
 
-	return f_ctx.SendStatus(204)
+	return fCtx.SendStatus(204)
 }

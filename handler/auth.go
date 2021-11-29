@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func extract_claims_from_jwt(c *fiber.Ctx) (jwt.MapClaims, error) {
+func extractClaimsFromJwt(c *fiber.Ctx) (jwt.MapClaims, error) {
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 
@@ -17,7 +17,7 @@ func extract_claims_from_jwt(c *fiber.Ctx) (jwt.MapClaims, error) {
 }
 
 func Login(c *fiber.Ctx) error {
-	db_con := c.Locals("db_con").(*gorm.DB)
+	dBCon := c.Locals("db_con").(*gorm.DB)
 
 	reqBody := new(schema.LoginReq)
 	if err := c.BodyParser(reqBody); err != nil {
@@ -30,7 +30,7 @@ func Login(c *fiber.Ctx) error {
 		return err
 	}
 
-	AuthService := service.AuthService{DBCon: db_con}
+	AuthService := service.AuthService{DBCon: dBCon}
 	token, err := AuthService.Login(reqBody)
 	if err != nil {
 		return c.Status(422).JSON(fiber.Map{

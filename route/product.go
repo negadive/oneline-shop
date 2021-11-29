@@ -11,24 +11,24 @@ import (
 )
 
 func setupProductHandler(db *gorm.DB, validate *validator.Validate) handler.IProductHandler {
-	ProductRepo := repository.NewProductRepository()
-	ProductAuthzer := authorizer.NewProductAuthorizer(ProductRepo)
-	ProductService := service.NewProductService(db, ProductAuthzer, ProductRepo)
-	ProductHandler := handler.NewProductHandler(ProductService, validate)
+	productRepo := repository.NewProductRepository()
+	productAuthzer := authorizer.NewProductAuthorizer(productRepo)
+	productService := service.NewProductService(db, productAuthzer, productRepo)
+	productHandler := handler.NewProductHandler(productService, validate)
 
-	return ProductHandler
+	return productHandler
 }
 
-func Product(app *fiber.App, ProductHandler handler.IProductHandler) {
+func Product(app *fiber.App, productHandler handler.IProductHandler) {
 	product := app.Group("/products")
 
-	product.Post("/", ProductHandler.Store)
-	product.Get("/", ProductHandler.FindAll)
-	product.Get("/:id", ProductHandler.GetOne)
-	product.Patch("/:id", ProductHandler.Update)
-	product.Delete("/:id", ProductHandler.Delete)
+	product.Post("/", productHandler.Store)
+	product.Get("/", productHandler.FindAll)
+	product.Get("/:id", productHandler.GetOne)
+	product.Patch("/:id", productHandler.Update)
+	product.Delete("/:id", productHandler.Delete)
 
 	users_product := app.Group("/users/:user_id/products")
 
-	users_product.Get("/", ProductHandler.FindAllByUser)
+	users_product.Get("/", productHandler.FindAllByUser)
 }

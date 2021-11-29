@@ -11,21 +11,21 @@ import (
 )
 
 func setupUserHandler(db *gorm.DB, validate *validator.Validate) handler.IUserHandler {
-	UserRepo := repository.NewUserRepository()
-	UserAuthzer := authorizer.NewUserAuthorizer(UserRepo)
-	UserService := service.NewUserService(db, UserAuthzer, UserRepo)
-	UserHandler := handler.NewUserHandler(
-		UserService,
+	userRepo := repository.NewUserRepository()
+	userAuthzer := authorizer.NewUserAuthorizer(userRepo)
+	userService := service.NewUserService(db, userAuthzer, userRepo)
+	userHandler := handler.NewUserHandler(
+		userService,
 		validate,
 	)
 
-	return UserHandler
+	return userHandler
 }
 
-func User(app *fiber.App, UserHandler handler.IUserHandler) {
+func User(app *fiber.App, userHandler handler.IUserHandler) {
 	user := app.Group("/users")
 
-	user.Post("/", UserHandler.Register)
-	user.Patch("/:id", UserHandler.Update)
+	user.Post("/", userHandler.Register)
+	user.Patch("/:id", userHandler.Update)
 
 }

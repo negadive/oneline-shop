@@ -11,20 +11,20 @@ import (
 )
 
 func setupOrderHandler(db *gorm.DB, validate *validator.Validate) handler.IOrderHandler {
-	OrderRepo := repository.NewOrderRepository()
-	ProductRepo := repository.NewProductRepository()
-	OrderAuthzer := authorizer.NewOrderAuthorizer(OrderRepo)
-	OrderService := service.NewOrderService(db, OrderAuthzer, OrderRepo, ProductRepo)
-	OrderHandler := handler.NewOrderHandler(
-		OrderService,
+	orderRepo := repository.NewOrderRepository()
+	productRepo := repository.NewProductRepository()
+	orderAuthzer := authorizer.NewOrderAuthorizer(orderRepo)
+	orderService := service.NewOrderService(db, orderAuthzer, orderRepo, productRepo)
+	orderHandler := handler.NewOrderHandler(
+		orderService,
 		validate,
 	)
 
-	return OrderHandler
+	return orderHandler
 }
 
-func Order(app *fiber.App, OrderHandler handler.IOrderHandler) {
+func Order(app *fiber.App, orderHandler handler.IOrderHandler) {
 	order := app.Group("/orders")
 
-	order.Post("/", OrderHandler.Store)
+	order.Post("/", orderHandler.Store)
 }

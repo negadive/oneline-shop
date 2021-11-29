@@ -38,7 +38,7 @@ func (s *AuthService) Login(data *schema.LoginReq) (string, error) {
 
 	token, err := s.CreateToken(user)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return token, nil

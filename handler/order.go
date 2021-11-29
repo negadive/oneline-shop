@@ -10,48 +10,48 @@ import (
 )
 
 type IOrderHandler interface {
-	Store(f_ctx *fiber.Ctx) error
+	Store(fCtx *fiber.Ctx) error
 }
 
 type OrderHandler struct {
-	OrderService service.IOrderService
-	Validate     *validator.Validate
+	orderService service.IOrderService
+	validate     *validator.Validate
 }
 
 func NewOrderHandler(
-	order_service service.IOrderService,
+	orderService service.IOrderService,
 	validate *validator.Validate,
 ) IOrderHandler {
 	return &OrderHandler{
-		OrderService: order_service,
+		orderService: orderService,
+		validate:     validate,
 	}
 }
 
-func (h *OrderHandler) Store(f_ctx *fiber.Ctx) error {
-	claims, err := extract_claims_from_jwt(f_ctx)
+func (h *OrderHandler) Store(fCtx *fiber.Ctx) error {
+	claims, err := extractClaimsFromJwt(fCtx)
 	if err != nil {
 		return err
 	}
-	auth_user_id := uint(claims["id"].(float64))
+	authUserId := uint(claims["id"].(float64))
 
-	req_body := new(schema.OrderStoreReq)
-	if err := f_ctx.BodyParser(&req_body); err != nil {
+	reqBody := new(schema.OrderStoreReq)
+	if err := fCtx.BodyParser(&reqBody); err != nil {
 		return err
 	}
-	validate := validator.New()
-	if err := validate.Struct(req_body); err != nil {
+	if err := h.validate.Struct(reqBody); err != nil {
 		return err
 	}
 
 	order := new(model.Order)
-	copier.Copy(&order, &req_body)
-	order.CustomerID = auth_user_id
-	if err := h.OrderService.Store(f_ctx.Context(), &auth_user_id, order, &req_body.ProductIDs); err != nil {
+	copier.Copy(&order, &reqBody)
+	order.CustomerID = authUserId
+	if err := h.orderService.Store(fCtx.Context(), &authUserId, order, &reqBody.ProductIDs); err != nil {
 		return err
 	}
 
-	res_body := new(schema.OrderStoreRes)
-	copier.Copy(&res_body, &order)
+	resBody := new(schema.OrderStoreRes)
+	copier.Copy(&resBody, &order)
 
-	return f_ctx.Status(201).JSON(&res_body)
+	return fCtx.Status(201).JSON(&resBody)
 }
