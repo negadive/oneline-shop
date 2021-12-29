@@ -13,8 +13,8 @@ type IProductRepository interface {
 	Update(ctx context.Context, tx *gorm.DB, productId *uint, product *model.Product) error
 	Delete(ctx context.Context, tx *gorm.DB, productId *uint) error
 	FindById(ctx context.Context, tx *gorm.DB, productId *uint) (*model.Product, error)
-	FindAll(ctx context.Context, tx *gorm.DB) (*[]model.Product, error)
-	FindAllOwnerByUser(ctx context.Context, tx *gorm.DB, ownerId *uint) (*[]model.Product, error)
+	FindAll(ctx context.Context, tx *gorm.DB) (*[]*model.Product, error)
+	FindAllOwnerByUser(ctx context.Context, tx *gorm.DB, ownerId *uint) (*[]*model.Product, error)
 	IsExists(ctx context.Context, tx *gorm.DB, productId *uint) bool
 	ProductWithOwnerExists(ctx context.Context, tx *gorm.DB, productId *uint, ownerId *uint) bool
 	FindByIds(ctx context.Context, tx *gorm.DB, products *[]model.Product, productIds *[]uint) error
@@ -62,8 +62,8 @@ func (repo *ProductRepository) FindById(ctx context.Context, tx *gorm.DB, produc
 	return &product, nil
 }
 
-func (repo *ProductRepository) FindAll(ctx context.Context, tx *gorm.DB) (*[]model.Product, error) {
-	products := []model.Product{}
+func (repo *ProductRepository) FindAll(ctx context.Context, tx *gorm.DB) (*[]*model.Product, error) {
+	products := []*model.Product{}
 	result := tx.WithContext(ctx).Model(&model.Product{}).Find(&products)
 
 	if result.Error != nil {
@@ -73,8 +73,8 @@ func (repo *ProductRepository) FindAll(ctx context.Context, tx *gorm.DB) (*[]mod
 	return &products, nil
 }
 
-func (repo *ProductRepository) FindAllOwnerByUser(ctx context.Context, tx *gorm.DB, ownerId *uint) (*[]model.Product, error) {
-	products := []model.Product{}
+func (repo *ProductRepository) FindAllOwnerByUser(ctx context.Context, tx *gorm.DB, ownerId *uint) (*[]*model.Product, error) {
+	products := []*model.Product{}
 	result := tx.WithContext(ctx).Model(&model.Product{}).Where("owner_id = ?", ownerId).Find(&products)
 
 	if result.Error != nil {

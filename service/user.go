@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/negadive/oneline/authorizer"
 	"github.com/negadive/oneline/customErrors"
@@ -37,6 +38,12 @@ func (s *UserService) Register(ctx context.Context, user *model.User) error {
 	tx := s.dBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
 	defer tx.Commit()
 
+	if user.Name == "" {
+		return errors.New("name cant be empty")
+	}
+	if user.Password == "" {
+		return errors.New("password cant be empty")
+	}
 	if err := s.userRepo.Store(ctx, tx, user); err != nil {
 		tx.Rollback()
 		return err

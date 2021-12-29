@@ -14,8 +14,8 @@ import (
 type IProductService interface {
 	Store(ctx context.Context, actorId *uint, product *model.Product) error
 	GetOne(ctx context.Context, productId *uint) (*model.Product, error)
-	FindAll(ctx context.Context) (*[]model.Product, error)
-	FindAllByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error)
+	FindAll(ctx context.Context) (*[]*model.Product, error)
+	FindAllByUser(ctx context.Context, owner_id *uint) (*[]*model.Product, error)
 	Delete(ctx context.Context, actorId *uint, productId *uint) error
 	Update(ctx context.Context, actorId *uint, productId *uint, product *model.Product) error
 }
@@ -66,7 +66,7 @@ func (s *ProductService) GetOne(ctx context.Context, productId *uint) (*model.Pr
 	return product, nil
 }
 
-func (s *ProductService) FindAll(ctx context.Context) (*[]model.Product, error) {
+func (s *ProductService) FindAll(ctx context.Context) (*[]*model.Product, error) {
 	tx := s.dBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
 	defer tx.Commit()
 
@@ -79,7 +79,7 @@ func (s *ProductService) FindAll(ctx context.Context) (*[]model.Product, error) 
 	return products, nil
 }
 
-func (s *ProductService) FindAllByUser(ctx context.Context, owner_id *uint) (*[]model.Product, error) {
+func (s *ProductService) FindAllByUser(ctx context.Context, owner_id *uint) (*[]*model.Product, error) {
 	tx := s.dBCon.Session(&gorm.Session{SkipDefaultTransaction: true})
 	defer tx.Commit()
 
